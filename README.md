@@ -1,8 +1,42 @@
 # testr.js
 
-Simple testing of require.js modules, with both real and stubbed dependencies
+Simple testing of require.js modules, with both stubbed and script-loaded dependencies.
 
-### Example Usage
+### Todo
+
+* Optional dependencies array
+* Configurable requirejs config/context
+* A new context for each call to the test API
+
+### Usage
+
+Each dependency can be stubbed, or loaded via RequireJS, using this simple test API:
+
+```javascript
+test('testModuleName', [dependency, ...*], callbackFunction);
+```
+
+**testModuleName**: the requirejs path name of the module to be unit tested.
+**dependencies**: an array of dependencies. This can be a mixture of stubbed objects and requirejs path names, and is passed to the test module definition function in the same order.
+**callbackFunction**: this function is passed a single parameter -- the test module initialised using the stubbed and real dependencies array.
+
+### Example
+
+The module under test is described below.
+
+```javascript
+define(['realdep1', 'realdep2'], function(realDep1, realDep2) {
+	return {
+		initialize: function() {
+			console.log('app init running');
+		},
+		addDeps: function() {
+			return realDep1.getValue() + realDep2.getValue();
+		}
+	}
+});
+
+#### Basic Example
 
 ```javascript
 var deps, stubDep;
@@ -24,7 +58,7 @@ test('app', deps, function(app) {
 });
 ```
 
-### Example Usage - Sinon.JS and Jasmine BDD
+#### Using Sinon.JS and Jasmine BDD
 
 ```javascript
 var deps, stubDep;
