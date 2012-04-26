@@ -16,8 +16,7 @@ var test = function(testModuleName, deps, cb) {
 	}
 
 	require.onScriptLoad = function(evt) {
-		var args = [].slice.call(arguments),
-			node = evt.currentTarget,
+		var node = evt.currentTarget,
 			moduleName = node.getAttribute("data-requiremodule");
 
 		// if script is module under test, define it as the module function to be built later
@@ -30,7 +29,7 @@ var test = function(testModuleName, deps, cb) {
 		}
 
 		// tell require.js to use last define (exec above) for this module
-		origScriptLoad.apply(require, args);
+		origScriptLoad(evt);
 	}
 
 	// determine which dependencies will be loaded via requirejs
