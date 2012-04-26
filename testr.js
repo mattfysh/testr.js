@@ -18,18 +18,18 @@ var test = function(testModuleName, deps, cb) {
 	require.onScriptLoad = function(evt) {
 		var args = [].slice.call(arguments),
 			node = evt.currentTarget,
-        	moduleName = node.getAttribute("data-requiremodule");
+			moduleName = node.getAttribute("data-requiremodule");
 
-        // if script is module under test, define it as the module function to be built later
-        if (moduleName === testModuleName) {
-        	origDefine(function() {
-        		return lastDefArgs[1];
-        	});
-        } else {
-        	origDefine.apply(null, lastDefArgs);
-        }
+		// if script is module under test, define it as the module function to be built later
+		if (moduleName === testModuleName) {
+			origDefine(function() {
+				return lastDefArgs[1];
+			});
+		} else {
+			origDefine.apply(null, lastDefArgs);
+		}
 
-        // tell require.js to use last define (exec above) for this module
+		// tell require.js to use last define (exec above) for this module
 		origScriptLoad.apply(require, args);
 	}
 
