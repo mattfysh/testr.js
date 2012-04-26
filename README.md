@@ -37,6 +37,7 @@ define(['realdep1', 'realdep2'], function(realDep1, realDep2) {
 		}
 	}
 });
+```
 
 #### Basic Example
 
