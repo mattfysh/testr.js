@@ -17,7 +17,9 @@ test('testModuleName', [dependency, ...*], callbackFunction);
 ```
 
 **testModuleName**: the requirejs path name of the module to be unit tested.
+
 **dependencies**: an array of dependencies. This can be a mixture of stubbed objects and requirejs path names, and is passed to the test module definition function in the same order.
+
 **callbackFunction**: this function is passed a single parameter -- the test module initialised using the stubbed and real dependencies array.
 
 ### Example
