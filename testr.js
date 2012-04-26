@@ -38,9 +38,8 @@ var test = function(testModuleName, deps, cb) {
 	}));
 
 	// make call to require
-	require(config, reqDeps, function() {
+	require(config, reqDeps, function(testModuleFn) {
 		var args = [].slice.call(arguments),
-			testModuleFn = args.shift(),
 			testModule;
 
 		// restore require js
