@@ -41,7 +41,7 @@ var test = function(testModuleName, deps, cb) {
 	require(config, reqDeps, function() {
 		var args = [].slice.call(arguments),
 			testModuleFn = args.shift(),
-			testModule;
+			getFreshTestModule;
 
 		// restore require js
 		define = origDefine;
@@ -57,9 +57,11 @@ var test = function(testModuleName, deps, cb) {
 		});
 
 		// build module
-		testModule = testModuleFn.apply(null, deps);
+		getFreshTestModule = function() {
+			return testModuleFn.apply(null, deps);
+		};
 
 		// pass module back for testing
-		cb(testModule);
+		cb(getFreshTestModule);
 	});
 };
