@@ -56,7 +56,7 @@ printToday = testr('printToday', {
 
 // testing
 output = printToday.getDateString();
-passed = (output === 'Today is Monday, 30 April, 2012');
+passed = (output === 'Today is Monday, 30th April, 2012');
 console.log('User-friendly date: ' + (passed ? 'PASS' : 'FAIL'));
 ```
 
