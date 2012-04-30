@@ -19,7 +19,7 @@ testr('testModuleName', stubs);
 The module under test is described below.
 
 ```javascript
-// requirejs path: 'printToday'
+// requirejs path: 'today'
 // default string.format.style: 'long'
 
 define(['string', 'util/date'], function(string, date) {
@@ -42,20 +42,17 @@ define(['string', 'util/date'], function(string, date) {
 In the following examples
 
 ```javascript
-var date, printToday, output, passed;
+var date, today, output, passed;
 
 // stubbing
-date = {
-	today: new Date(2012, 3, 30)
-};
+date = {};
+date.today = new Date(2012, 3, 30);
 
 // module instancing
-printToday = testr('printToday', {
-				'util/date': date
-			});
+today = testr('today', {'util/date': date});
 
 // testing
-output = printToday.getDateString();
+output = today.getDateString();
 passed = (output === 'Today is Monday, 30th April, 2012');
 console.log('User-friendly date: ' + (passed ? 'PASS' : 'FAIL'));
 ```
@@ -65,15 +62,11 @@ console.log('User-friendly date: ' + (passed ? 'PASS' : 'FAIL'));
 ```javascript
 describe('Today print', function() {
 
-	var date, printToday;
+	var date = {}, today;
 
 	function resetTestModule() {
-		date = {
-			today: new Date(2012, 3, 30)
-		}
-		printToday = testr('printToday', {
-						'util/date': date
-					});
+		date.today = new Date(2012, 3, 30);
+		today = testr('today', {'util/date': date});
 	}
 
 	beforeEach(function() {
@@ -81,21 +74,21 @@ describe('Today print', function() {
 	});
 
 	it('is user-friendly', function() {
-		expect(printToday.getDateString()).toBe('Today is Monday, 30th April, 2012');
+		expect(today.getDateString()).toBe('Today is Monday, 30th April, 2012');
 	});
 
 	it('updates the print format', function() {
 		date.today = new Date(2012, 2, 30);
-		printToday.setFormat('short');
-		printToday.polluted = true;
-		expect(printToday.getDateString()).toBe('Today is Fri, 30 Mar 12');
-		expect(printToday.getFormat()).toBe('short');
+		today.setFormat('short');
+		today.polluted = true;
+		expect(today.getDateString()).toBe('Today is Fri, 30 Mar 12');
+		expect(today.getFormat()).toBe('short');
 	});
 
 	it('is not polluted', function() {
-		expect(printToday.polluted).toBeUndefined();
-		expect(printToday.getDateString()).toBe('Today is Monday, 30th April, 2012');
-		expect(printToday.getFormat()).toBe('long');
+		expect(today.polluted).toBeUndefined();
+		expect(today.getDateString()).toBe('Today is Monday, 30th April, 2012');
+		expect(today.getFormat()).toBe('long');
 	});
 
 });
