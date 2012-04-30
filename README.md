@@ -95,7 +95,7 @@ describe('Today print', function() {
 	it('is not polluted', function() {
 		expect(printToday.polluted).toBeUndefined();
 		expect(printToday.getDateString()).toBe('Today is Monday, 30th April, 2012');
-		expect(printToday.getForm()).toBe('long');
+		expect(printToday.getFormat()).toBe('long');
 	});
 
 });
