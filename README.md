@@ -1,95 +1,102 @@
 # testr.js
 
-Simple testing of require.js modules, with both stubbed and script-loaded dependencies.
-
-### Todo
-
-* Optional dependencies array
-* Configurable requirejs config/context
-* A new context for each call to the test API
+Unit testing require.js modules, with both stubbed and script-loaded dependencies.
 
 ### Usage
 
-Each dependency can be stubbed, or loaded via RequireJS, using this simple test API:
+Create a new instance of a module under test using the testr method:
 
 ```javascript
-test('testModuleName', [dependency, ...*], callbackFunction);
+testr('testModuleName', stubs);
 ```
 
 **testModuleName**: the requirejs path name of the module to be unit tested.
 
-**dependencies**: an array of dependencies. This can be a mixture of stubbed objects and requirejs path names, and is passed to the test module definition function in the same order.
-
-**callbackFunction**: this function is passed a single parameter &mdash; the test module initialised using the stubbed and real dependencies array.
+**stubs**: an object of stubs to use in place of dependencies. Each key is the requirejs path name of the module to be stubbed; each value is the module object to use as the stub.
 
 ### Example
 
 The module under test is described below.
 
-```javascript
-define(['realdep1', 'realdep2'], function(realDep1, realDep2) {
-	return {
-		initialize: function() {
-			console.log('app init running');
-		},
-		addDeps: function() {
-			return realDep1.getValue() + realDep2.getValue();
+	```javascript
+	// requirejs path: 'printToday'
+	// default string.format.style: 'long'
+
+	define(['string', 'util/date'], function(string, date) {
+		return {
+			getDateString: function() {
+				return string.format('Today is %d', date.today);
+			},
+			setFormat: function(form) {
+				string.format.style = form;
+			},
+			getFormat: function() {
+				return string.format.style;
+			}
 		}
-	}
-});
-```
+	});
+	```
 
 #### Basic Example
 
-```javascript
-var deps, stubDep;
+In the following examples
 
-// stubbing
-stubDep = {
-	getValue: function() {
-		return 5;
-	}
-};
+	```javascript
+	var date, printToday, output, passed;
 
-// dependency map
-deps = [stubDep, 'realdep2'];
+	// stubbing
+	date = {
+		today: new Date(2012, 3, 30)
+	};
 
-test('app', deps, function(app) {
+	// module instancing
+	printToday = testr('printToday', {
+					'util/date': date
+				});
+
 	// testing
-	console.log('init is a function: ' + (typeof app.initialize === 'function'));
-	console.log('addDeps is 7: ' + (app.addDeps() === 7));
-});
-```
+	output = printToday.getDateString();
+	passed = (output === 'Today is Monday, 30 April, 2012');
+	console.log('User-friendly date: ' + (passed ? 'PASS' : 'FAIL'));
+	```
 
-#### Using Sinon.JS and Jasmine BDD
+##### Using Jasmine BDD
 
-```javascript
-var deps, stubDep;
+	```javascript
+	describe('Today print', function() {
 
-// stubbing
-stubDep = {};
-stubDep.getValue = sinon.stub().returns(5);
+		var date, printToday;
 
-// dependency map
-deps = [stubDep, 'realdep2'];
+		function resetTestModule() {
+			date = {
+				today: new Date(2012, 3, 30)
+			}
+			printToday = testr('printToday', {
+							'util/date': date
+						});
+		}
 
-test('app', deps, function(app) {
-	// testing
-	describe('Application module', function() {
-
-		it('defines an initialize function', function() {
-			expect(app.initialize).toBeDefined()
+		beforeEach(function() {
+			resetTestModule();	
 		});
 
-		it('calls stub getValue function', function() {
-			app.addDeps();
-			expect(stubDep.getValue.called).toBe(true);
+		it('is user-friendly', function() {
+			expect(printToday.getDateString()).toBe('Today is Monday, 30th April, 2012');
 		});
 
-		it('adds dependency values', function() {
-			expect(app.addDeps()).toBe(7);
+		it('updates the print format', function() {
+			date.today = new Date(2012, 2, 30);
+			printToday.setFormat('short');
+			printToday.polluted = true;
+			expect(printToday.getDateString()).toBe('Today is Fri, 30 Mar 12');
+			expect(printToday.getFormat()).toBe('short');
+		});
+
+		it('is not polluted', function() {
+			expect(printToday.polluted).toBeUndefined();
+			expect(printToday.getDateString()).toBe('Today is Monday, 30th April, 2012');
+			expect(printToday.getForm()).toBe('long');
 		});
 
 	});
-});
-```
+	```
