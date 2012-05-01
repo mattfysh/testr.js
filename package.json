@@ -1,0 +1,11 @@
+{
+	name: "testrjs",
+	version: "1.0",
+	author: "Matt Fysh <mattfysh@gmail.com>",
+	description: "Unit testing require.js modules, with both stubbed and script-loaded dependencies.",
+	repository: {
+		type: "git",
+		url: "https://github.com/mattfysh/testr.js"
+	},
+	license: "MIT"
+}

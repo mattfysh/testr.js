@@ -1,6 +1,7 @@
 # testr.js
 
 Unit testing require.js modules, with both stubbed and script-loaded dependencies.
+Distributed under the MIT license.
 
 ### Usage
 
