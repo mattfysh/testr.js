@@ -1,6 +1,7 @@
 # testr.js
 
 Unit testing require.js modules, with both stubbed and script-loaded dependencies.
+Compatible with all test frameworks - Jasmine, QUnit, JsTestDriver, Buster JS, etc.
 Distributed under the MIT license.
 
 ### Usage
@@ -13,7 +14,7 @@ testr('testModuleName', stubs);
 
 **testModuleName**: the requirejs path name of the module to be unit tested.
 
-**stubs**: an object of stubs to use in place of dependencies. Each key is the requirejs path name of the module to be stubbed; each value is the module object to use as the stub.
+**stubs**: a collection of stubs to use in place of dependencies. Each key is the requirejs path name of the module to be stubbed; each value is the module object to use as the stub.
 
 ### Example
 
@@ -38,9 +39,7 @@ define(['string', 'util/date'], function(string, date) {
 });
 ```
 
-#### Basic Example
-
-In the following examples
+Testing the *today* module, while stubbing the *date* module and using the actual *string* implementation.
 
 ```javascript
 var date, today, output, passed;
@@ -58,7 +57,7 @@ passed = (output === 'Today is Monday, 30th April, 2012');
 console.log('User-friendly date: ' + (passed ? 'PASS' : 'FAIL'));
 ```
 
-##### Using Jasmine BDD
+#### Using Jasmine BDD
 
 ```javascript
 describe('Today print', function() {
@@ -94,3 +93,13 @@ describe('Today print', function() {
 
 });
 ```
+
+### Projects using testr.js
+
+#### [asq](https://github.com/mattfysh/asq)
+
+Wrap a 'one-at-a-time' queue around an asynchronous function.
+
+#### [after](https://github.com/mattfysh/after)
+
+Another promises implementation.

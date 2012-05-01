@@ -1,4 +1,4 @@
-var testr;
+var testr, require, define;
 
 (function() {
 
@@ -61,13 +61,12 @@ var testr;
 		var node = e.currentTarget,
 			moduleName = e.currentTarget.getAttribute('data-requiremodule');
 
-		// process
+		// store module definition function and list of dependencies
 		moduleMap[moduleName] = {
 			module: lastDefArgs.pop(),
 			deps: lastDefArgs.pop()
 		}
 
-		// 
 		origOnScriptLoad.apply(null, arguments);
 	};
 
