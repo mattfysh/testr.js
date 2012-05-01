@@ -64,13 +64,9 @@ describe('Today print', function() {
 
 	var date = {}, today;
 
-	function resetTestModule() {
-		date.today = new Date(2012, 3, 30);
-		today = testr('today', {'util/date': date});
-	}
-
 	beforeEach(function() {
-		resetTestModule();	
+		date.today = new Date(2012, 3, 30);
+		today = testr('today', {'util/date': date});	
 	});
 
 	it('is user-friendly', function() {
