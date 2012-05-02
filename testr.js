@@ -65,8 +65,8 @@ var testr, require, define;
 	// listen for script load events
 	origRequire.onScriptLoad = function(e) {
 		var node = e.currentTarget,
-			moduleName = e.currentTarget.getAttribute('data-requiremodule'),
-			moduleContext = e.currentTarget.getAttribute('data-requirecontext'),
+			moduleName = node.getAttribute('data-requiremodule'),
+			moduleContext = node.getAttribute('data-requirecontext'),
 			map = (moduleContext === 'stub') ? stubMap : moduleMap;
 
 		// tell requirejs the script has loaded
