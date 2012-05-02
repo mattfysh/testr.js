@@ -10,7 +10,7 @@ var testr, require, define;
 		stubMap = {},
 		lastDefArgs;
 
-	// tests
+	// type detection
 	function isArray(a) {
 		return toString.call(a) == '[object Array]';
 	}
@@ -71,13 +71,22 @@ var testr, require, define;
 			moduleContext = e.currentTarget.getAttribute('data-requirecontext'),
 			map = (moduleContext === 'stub') ? stubMap : moduleMap;
 
+		// tell requirejs the script has loaded
+		origOnScriptLoad.apply(null, arguments);
+
+		// don't store references to spec files
+		if (moduleContext === 'spec') {
+			return;
+		}
+
+		// clean module name
+		moduleName = moduleName.replace(/\.stub$/i, '');
+
 		// store module definition function and list of dependencies
 		map[moduleName] = {
 			module: lastDefArgs.pop(),
 			deps: lastDefArgs.pop()
 		}
-
-		origOnScriptLoad.apply(null, arguments);
 	};
 
 	// create modules on the fly with module map
@@ -97,7 +106,7 @@ var testr, require, define;
 		}
 		
 		// get module definition from map
-		moduleDef = (useExternal && stubMap[moduleName + '.stub']) || moduleMap[moduleName];
+		moduleDef = (useExternal && stubMap[moduleName]) || moduleMap[moduleName];
 		if (!moduleDef) {
 			throw Error('module has not been loaded: ' + moduleName);
 		}
