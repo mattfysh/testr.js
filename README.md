@@ -6,7 +6,7 @@ Distributed under the MIT license.
 
 ### Usage
 
-Create a new instance of a module under test using the testr method:
+Create a new instance of a module under test using the `testr` method:
 
 ```javascript
 testr('path/to/module', stubs);
@@ -14,13 +14,13 @@ testr('path/to/module', useExternal);
 testr('path/to/module', stubs, useExternal);
 ```
 
-**stubs**: *(optional)* a collection of stubs to use in place of dependencies. Each key is the requirejs path name of the module to be stubbed; each value is the module object to use as the stub.
+**stubs**: *(optional)* a collection of stubs to use in place of dependencies. Each key is the requirejs path name of the module to be stubbed; each value is the stub.
 
 **useExternal**: *(optional)* a boolean to indicate if you wish to load in stubs from an external file. See the *Setup* section for details on where the external stub files should be placed.
 
 ### Setup
 
-Include the requirejs script before testr.js, and be sure to have a valid `data-main` attribute that points to your application's top-level require call. Once all source code has been loaded, testr.js will automatically attempt to load all spec and external stub files. These will use an identical path, with a base url of `spec` or `stub`. For example:
+Include the requirejs script before testr.js, and be sure to have a valid `data-main` attribute that points to your application's top-level require call. Once all source code has been loaded, testr.js will automatically attempt to load all spec and external stub files. These will use an identical path, with a base url and suffix of either `spec` or `stub`. For example:
 
 > **Source**: /src/path/to/module.js  
 > **Spec**: /spec/path/to/module.spec.js  

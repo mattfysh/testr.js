@@ -9,7 +9,8 @@ var testr, require, define;
 		moduleMap = {},
 		stubMap = {},
 		depLoad = false,
-		lastDefArgs;
+		lastDefArgs,
+		autoLoad = ['spec', 'stub'];
 
 	// type detection
 	function isArray(a) {
@@ -34,35 +35,31 @@ var testr, require, define;
 	// listen for require call
 	require = function(deps) {
 		origRequire(deps, function() {
-			// auto-add all specs and stubs
-			var specs = [], stubs = [],
-				requireSpec = origRequire.config({
-					context: 'spec',
-					baseUrl: 'spec'
-				}),
-				requireStub = origRequire.config({
-					context: 'stub',
-					baseUrl: 'stub'
-				});
+			// auto load specs and stubs
+			for (var i = 0; i < autoLoad.length; i += 1) {
+				var type = autoLoad[i],
+					paths = [],
+					require = origRequire.config({
+						context: type,
+						baseUrl: type
+					});
 
-			for (var path in moduleMap) {
-				if (moduleMap.hasOwnProperty(path)) {
-					specs.push(path + '.spec');
-					stubs.push(path + '.stub');
-				};
+				for (var path in moduleMap) {
+					if (moduleMap.hasOwnProperty(path)) {
+						paths.push(path + '.' + type);
+					}
+				}
+
+				require(paths, noop);
 			}
-			
-			// add scrips to page (likely to result in many 404s, can this be fixed?)
-			requireSpec(specs, noop);
-			requireStub(stubs, noop);
 		});
 	};
 
 	// listen for define call
 	define = function() {
-		var deps = (arguments.length > 1 && arguments[0]);
-		lastDefArgs = [].slice.call(arguments)
-		origDefine(deps, noop);
+		var args = [].slice.call(arguments);
+		lastDefArgs = [].slice.call(arguments);
+		origDefine.apply(null, (args.splice(-1, 1, noop), args));
 	};
 
 	// listen for script load events
