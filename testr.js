@@ -8,6 +8,7 @@ var testr, require, define;
 		noop = function() {},
 		moduleMap = {},
 		stubMap = {},
+		depLoad = false,
 		lastDefArgs;
 
 	// type detection
@@ -92,8 +93,7 @@ var testr, require, define;
 	// create modules on the fly with module map
 	testr = function(moduleName, stubs, useExternal) {
 		var depModules = [],
-			moduleDef, module, deps, i,
-			args = [].slice.call(arguments);
+			moduleDef, module, deps, i;
 
 		// check parameters
 		if (typeof moduleName !== 'string') {
@@ -101,12 +101,13 @@ var testr, require, define;
 		}
 		if (!useExternal && typeof stubs === 'boolean') {
 			useExternal = stubs;
+			stubs = {};
 		} else if (stubs && !isObject(stubs)) {
 			throw Error('stubs must be given as an object');
 		}
 		
 		// get module definition from map
-		moduleDef = (useExternal && stubMap[moduleName]) || moduleMap[moduleName];
+		moduleDef = (depLoad && useExternal && stubMap[moduleName]) || moduleMap[moduleName];
 		if (!moduleDef) {
 			throw Error('module has not been loaded: ' + moduleName);
 		}
@@ -116,15 +117,16 @@ var testr, require, define;
 		deps = moduleDef.deps;
 
 		// load up dependencies
+		depLoad = true;
 		if (deps) {
 			for (i = 0; i < deps.length; i += 1) {
 				var depName = deps[i],
 					stub = stubs && stubs[depName];
 
-				args[0] = depName;
-				depModules.push(stub || testr.apply(null, args));
+				depModules.push(stub || testr(depName, stubs, useExternal));
 			}
 		}
+		depLoad = false;
 
 		// return clean instance of module
 		return (typeof module === 'function') ? module.apply(null, depModules) : deepCopy(module);

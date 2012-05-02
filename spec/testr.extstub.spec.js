@@ -14,5 +14,10 @@ describe('testr external stub', function() {
 		expect(hasDeps.dep.takesPrecedence).toBe(true);
 		expect(hasDeps.dep.isExternalStub).toBeUndefined();
 	});
+
+	it('isnt used for module under test', function() {
+		var isDep = testr('isdep', true);
+		expect(isDep.isDep).toBe(true);
+	});
 	
 });

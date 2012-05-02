@@ -25,5 +25,14 @@ describe('testr with stubs', function() {
 			});
 		expect(module.dep.deepDep.relDep.isStubbed).toBe(true);
 	});
+
+	it('doesnt use stub for module under test', function() {
+		var module = testr('hasdeps', {
+			'hasdeps': {
+				stubbed: true
+			}
+		});
+		expect(module.stubbed).toBeUndefined();
+	});
 	
 });
