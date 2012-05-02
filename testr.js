@@ -7,6 +7,7 @@ var testr, require, define;
 		origOnScriptLoad = require.onScriptLoad,
 		noop = function() {},
 		moduleMap = {},
+		stubMap = {},
 		lastDefArgs;
 
 	// tests
@@ -32,20 +33,27 @@ var testr, require, define;
 	// listen for require call
 	require = function(deps) {
 		origRequire(deps, function() {
-			// auto-add all specs
-			var specs = [],
+			// auto-add all specs and stubs
+			var specs = [], stubs = [],
 				requireSpec = origRequire.config({
 					context: 'spec',
 					baseUrl: 'spec'
+				}),
+				requireStub = origRequire.config({
+					context: 'stub',
+					baseUrl: 'stub'
 				});
 
 			for (var path in moduleMap) {
 				if (moduleMap.hasOwnProperty(path)) {
 					specs.push(path + '.spec');
+					stubs.push(path + '.stub');
 				};
 			}
 			
+			// add scrips to page (likely to result in many 404s, can this be fixed?)
 			requireSpec(specs, noop);
+			requireStub(stubs, noop);
 		});
 	};
 
@@ -59,10 +67,12 @@ var testr, require, define;
 	// listen for script load events
 	origRequire.onScriptLoad = function(e) {
 		var node = e.currentTarget,
-			moduleName = e.currentTarget.getAttribute('data-requiremodule');
+			moduleName = e.currentTarget.getAttribute('data-requiremodule'),
+			moduleContext = e.currentTarget.getAttribute('data-requirecontext'),
+			map = (moduleContext === 'stub') ? stubMap : moduleMap;
 
 		// store module definition function and list of dependencies
-		moduleMap[moduleName] = {
+		map[moduleName] = {
 			module: lastDefArgs.pop(),
 			deps: lastDefArgs.pop()
 		}
@@ -71,19 +81,23 @@ var testr, require, define;
 	};
 
 	// create modules on the fly with module map
-	testr = function(moduleName, stubs) {
+	testr = function(moduleName, stubs, useExternal) {
 		var depModules = [],
-			moduleDef, module, deps, i;
+			moduleDef, module, deps, i,
+			args = [].slice.call(arguments);
 
-		// check input
+		// check parameters
 		if (typeof moduleName !== 'string') {
 			throw Error('module name must be a string');
-		} else if(stubs && !isObject(stubs)) {
+		}
+		if (!useExternal && typeof stubs === 'boolean') {
+			useExternal = stubs;
+		} else if (stubs && !isObject(stubs)) {
 			throw Error('stubs must be given as an object');
 		}
 		
 		// get module definition from map
-		moduleDef = moduleMap[moduleName];
+		moduleDef = (useExternal && stubMap[moduleName + '.stub']) || moduleMap[moduleName];
 		if (!moduleDef) {
 			throw Error('module has not been loaded: ' + moduleName);
 		}
@@ -98,7 +112,8 @@ var testr, require, define;
 				var depName = deps[i],
 					stub = stubs && stubs[depName];
 
-				depModules.push(stub || testr(depName, stubs));
+				args[0] = depName;
+				depModules.push(stub || testr.apply(null, args));
 			}
 		}
 
