@@ -19,5 +19,10 @@ describe('testr external stub', function() {
 		var isDep = testr('isdep', true);
 		expect(isDep.isDep).toBe(true);
 	});
+
+	it('allows more than one external stub', function() {
+		var hasDeps = testr('hasdeps', true);
+		expect(hasDeps.objDep.isExternalStub).toBe(true);
+	});
 	
 });

@@ -8,7 +8,6 @@ var testr, require, define;
 		noop = function() {},
 		moduleMap = {},
 		stubMap = {},
-		depLoad = false,
 		lastDefArgs,
 		autoLoad = ['spec', 'stub'];
 
@@ -88,23 +87,12 @@ var testr, require, define;
 	};
 
 	// create modules on the fly with module map
-	testr = function(moduleName, stubs, useExternal) {
+	buildModule = function(moduleName, stubs, useExternal, subject) {
 		var depModules = [],
 			moduleDef, module, deps, i;
 
-		// check parameters
-		if (typeof moduleName !== 'string') {
-			throw Error('module name must be a string');
-		}
-		if (!useExternal && typeof stubs === 'boolean') {
-			useExternal = stubs;
-			stubs = {};
-		} else if (stubs && !isObject(stubs)) {
-			throw Error('stubs must be given as an object');
-		}
-		
 		// get module definition from map
-		moduleDef = (depLoad && useExternal && stubMap[moduleName]) || moduleMap[moduleName];
+		moduleDef = (!subject && useExternal && stubMap[moduleName]) || moduleMap[moduleName];
 		if (!moduleDef) {
 			throw Error('module has not been loaded: ' + moduleName);
 		}
@@ -114,19 +102,36 @@ var testr, require, define;
 		deps = moduleDef.deps;
 
 		// load up dependencies
-		depLoad = true;
 		if (deps) {
 			for (i = 0; i < deps.length; i += 1) {
 				var depName = deps[i],
 					stub = stubs && stubs[depName];
 
-				depModules.push(stub || testr(depName, stubs, useExternal));
+				depModules.push(stub || buildModule(depName, stubs, useExternal));
 			}
 		}
-		depLoad = false;
 
 		// return clean instance of module
 		return (typeof module === 'function') ? module.apply(null, depModules) : deepCopy(module);
+	}
+
+	// define API
+	testr = function(moduleName, stubs, useExternal) {
+		// check module name
+		if (typeof moduleName !== 'string') {
+			throw Error('module name must be a string');
+		}
+
+		// check stubs
+		if (!useExternal && typeof stubs === 'boolean') {
+			useExternal = stubs;
+			stubs = {};
+		} else if (stubs && !isObject(stubs)) {
+			throw Error('stubs must be given as an object');
+		}
+
+		// build the module under test
+		return buildModule(moduleName, stubs, useExternal, true);
 	}
 
 }());

@@ -20,14 +20,14 @@ describe('testr with stubs', function() {
 	});
 
 	it('works on nested deps', function() {
-		var module = testr('hasdeps', {
+		module = testr('hasdeps', {
 				'deeper/samedir': stubDep
 			});
 		expect(module.dep.deepDep.relDep.isStubbed).toBe(true);
 	});
 
 	it('doesnt use stub for module under test', function() {
-		var module = testr('hasdeps', {
+		module = testr('hasdeps', {
 			'hasdeps': {
 				stubbed: true
 			}
