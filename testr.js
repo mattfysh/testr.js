@@ -2,13 +2,10 @@ var testr, require, define;
 
 (function() {
 
-	var origRequire = require,
-		origDefine = define,
-		origOnScriptLoad = require.onScriptLoad,
+	var origDefine = define,
 		noop = function() {},
 		moduleMap = {},
 		stubMap = {},
-		lastDefArgs,
 		autoLoad = ['spec', 'stub'];
 
 	// type detection
@@ -31,14 +28,14 @@ var testr, require, define;
 		return tgt;
 	}
 
-	// listen for require call
+	// override require
 	require = function(deps) {
-		origRequire(deps, function() {
+		requirejs(deps, function() {
 			// auto load specs and stubs
 			for (var i = 0; i < autoLoad.length; i += 1) {
 				var type = autoLoad[i],
 					paths = [],
-					require = origRequire.config({
+					require = requirejs.config({
 						context: type,
 						baseUrl: type
 					});
@@ -54,42 +51,62 @@ var testr, require, define;
 		});
 	};
 
-	// listen for define call
+	// override define
 	define = function() {
-		var args = [].slice.call(arguments);
-		lastDefArgs = [].slice.call(arguments);
-		origDefine.apply(null, (args.splice(-1, 1, noop), args));
+		var args = [].slice.call(arguments),
+			factory = args.pop();
+
+		// use module as a dependency to get the module id
+		if(!args.length) {
+			args.push([]);
+		}
+		args[0].unshift('module');
+
+		// capture the call to define the function
+		args.push(function(module) {
+			// process any relative paths
+			var deps = args[0].splice(1),
+				i;
+
+			for (i = 0; i < deps.length; i += 1) {
+				if (deps[i].indexOf('./') === 0) {
+					deps[i] = module.id.replace(/\/(.*)$/, deps[i].substring(1));
+				}
+			}
+
+			// save the module
+			saveModule(module, deps, factory);
+		});
+
+		// hook back into the loader
+		origDefine.apply(null, args);
 	};
 
-	// listen for script load events
-	origRequire.onScriptLoad = function(e) {
-		var node = e.currentTarget,
-			moduleName = node.getAttribute('data-requiremodule'),
-			moduleContext = node.getAttribute('data-requirecontext'),
-			map = (moduleContext === 'stub') ? stubMap : moduleMap;
+	// save a module into the map
+	function saveModule(module, deps, factory) {
+		var moduleName = module.id,
+			type = module.uri.split('/')[0],
+			map;
 
-		// tell requirejs the script has loaded
-		origOnScriptLoad.apply(null, arguments);
-
-		// don't store references to spec files
-		if (moduleContext === 'spec') {
-			return;
+		// adjust name and determine map to use
+		if (type === 'stub') {
+			moduleName = moduleName.replace(/\.stub$/i, '');
+			map = stubMap;
+		} else {
+			map = moduleMap;
 		}
-
-		// clean module name
-		moduleName = moduleName.replace(/\.stub$/i, '');
 
 		// store module definition function and list of dependencies
 		map[moduleName] = {
-			module: lastDefArgs.pop(),
-			deps: lastDefArgs.pop()
+			factory: factory,
+			deps: deps
 		}
-	};
+	}
 
 	// create modules on the fly with module map
-	buildModule = function(moduleName, stubs, useExternal, subject) {
+	function buildModule(moduleName, stubs, useExternal, subject) {
 		var depModules = [],
-			moduleDef, module, deps, i;
+			moduleDef, factory, deps, i;
 
 		// get module definition from map
 		moduleDef = (!subject && useExternal && stubMap[moduleName]) || moduleMap[moduleName];
@@ -98,7 +115,7 @@ var testr, require, define;
 		}
 
 		// shortcuts
-		module = moduleDef.module;
+		factory = moduleDef.factory;
 		deps = moduleDef.deps;
 
 		// load up dependencies
@@ -112,7 +129,7 @@ var testr, require, define;
 		}
 
 		// return clean instance of module
-		return (typeof module === 'function') ? module.apply(null, depModules) : deepCopy(module);
+		return (typeof factory === 'function') ? factory.apply(null, depModules) : deepCopy(factory);
 	}
 
 	// define API
