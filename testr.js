@@ -64,18 +64,12 @@ var testr, require, define;
 
 		// capture the call to define the function
 		args.push(function(module) {
-			// process any relative paths
-			var deps = args[0].splice(1),
-				i;
-
-			for (i = 0; i < deps.length; i += 1) {
-				if (deps[i].indexOf('./') === 0) {
-					deps[i] = module.id.replace(/\/(.*)$/, deps[i].substring(1));
-				}
-			}
-
-			// save the module
+			// extract dependency path names and save the module
+			var deps = [].slice.call(arguments, 1);
 			saveModule(module, deps, factory);
+
+			// define the module as its path name, to be used by dependants
+			return module.id;
 		});
 
 		// hook back into the loader
