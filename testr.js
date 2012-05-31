@@ -5,7 +5,6 @@ var testr, require, define;
 	var origDefine = define,
 		noop = function() {},
 		moduleMap = {},
-		stubMap = {},
 		autoLoad = ['spec', 'stub'];
 
 	// type detection
@@ -36,7 +35,6 @@ var testr, require, define;
 				var type = autoLoad[i],
 					paths = [],
 					require = requirejs.config({
-						context: type,
 						baseUrl: type
 					});
 
@@ -66,36 +64,18 @@ var testr, require, define;
 		args.push(function(module) {
 			// extract dependency path names and save the module
 			var deps = [].slice.call(arguments, 1);
-			saveModule(module, deps, factory);
+			moduleMap[module.id] = {
+				factory: factory,
+				deps: deps
+			}
 
-			// define the module as its path name, to be used by dependants
+			// define the module as its path name, used by dependants
 			return module.id;
 		});
 
-		// hook back into the loader
+		// hook back into the loader to allow dependency resolution
 		origDefine.apply(null, args);
 	};
-
-	// save a module into the map
-	function saveModule(module, deps, factory) {
-		var moduleName = module.id,
-			type = module.uri.split('/')[0],
-			map;
-
-		// adjust name and determine map to use
-		if (type === 'stub') {
-			moduleName = moduleName.replace(/\.stub$/i, '');
-			map = stubMap;
-		} else {
-			map = moduleMap;
-		}
-
-		// store module definition function and list of dependencies
-		map[moduleName] = {
-			factory: factory,
-			deps: deps
-		}
-	}
 
 	// create modules on the fly with module map
 	function buildModule(moduleName, stubs, useExternal, subject) {
@@ -103,7 +83,7 @@ var testr, require, define;
 			moduleDef, factory, deps, i;
 
 		// get module definition from map
-		moduleDef = (!subject && useExternal && stubMap[moduleName]) || moduleMap[moduleName];
+		moduleDef = (!subject && useExternal && moduleMap[moduleName + '.stub']) || moduleMap[moduleName];
 		if (!moduleDef) {
 			throw Error('module has not been loaded: ' + moduleName);
 		}
@@ -146,4 +126,3 @@ var testr, require, define;
 	}
 
 }());
-
