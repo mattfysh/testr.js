@@ -1,11 +1,10 @@
-var testr, require, define;
+var testr, define;
 
 (function() {
 
 	var origDefine = define,
 		noop = function() {},
-		moduleMap = {},
-		autoLoad = ['spec', 'stub'];
+		moduleMap = {};
 
 	// type detection
 	function isArray(a) {
@@ -27,27 +26,12 @@ var testr, require, define;
 		return tgt;
 	}
 
-	// override require
-	require = function(deps) {
-		requirejs(deps, function() {
-			// auto load specs and stubs
-			for (var i = 0; i < autoLoad.length; i += 1) {
-				var type = autoLoad[i],
-					paths = [],
-					require = requirejs.config({
-						baseUrl: type
-					});
-
-				for (var path in moduleMap) {
-					if (moduleMap.hasOwnProperty(path)) {
-						paths.push(path + '.' + type);
-					}
-				}
-
-				require(paths, noop);
-			}
-		});
-	};
+	// each
+	function each(items, callback) {
+		for (var i = 0; i < items.length; i += 1) {
+			callback(items[i], i);
+		}
+	}
 
 	// override define
 	define = function() {
@@ -62,18 +46,30 @@ var testr, require, define;
 
 		// capture the call to define the function
 		args.push(function(module) {
-			// extract dependency path names and save the module
-			var deps = [].slice.call(arguments, 1);
+			// extract dependency path names
+			var deps = [].slice.call(arguments, 1),
+				i, type;
+
+			// save the module
 			moduleMap[module.id] = {
 				factory: factory,
 				deps: deps
 			}
 
-			// define the module as its path name, used by dependants
-			return module.id;
+			if (module.uri.indexOf('./stub') !== 0) {
+				// auto load associated files
+				require({
+					context: module.id,
+					baseUrl: '.',
+					deps: ['stub/' + module.id + '.stub', 'spec/' + module.id + '.spec']
+				});
+
+				// define the module as its path name, used by dependants
+				return module.id;
+			}
 		});
 
-		// hook back into the loader to allow dependency resolution
+		// hook back into the loader to trigger dependency loading
 		origDefine.apply(null, args);
 	};
 
@@ -83,7 +79,7 @@ var testr, require, define;
 			moduleDef, factory, deps, i;
 
 		// get module definition from map
-		moduleDef = (!subject && useExternal && moduleMap[moduleName + '.stub']) || moduleMap[moduleName];
+		moduleDef = (!subject && useExternal && moduleMap['stub/' + moduleName + '.stub']) || moduleMap[moduleName];
 		if (!moduleDef) {
 			throw Error('module has not been loaded: ' + moduleName);
 		}
@@ -94,12 +90,10 @@ var testr, require, define;
 
 		// load up dependencies
 		if (deps) {
-			for (i = 0; i < deps.length; i += 1) {
-				var depName = deps[i],
-					stub = stubs && stubs[depName];
-
-				depModules.push(stub || buildModule(depName, stubs, useExternal));
-			}
+			each(deps, function(depName) {
+				var dep = stubs && stubs[depName] || buildModule(depName, stubs, useExternal);
+				depModules.push(dep);
+			});
 		}
 
 		// return clean instance of module
