@@ -1,4 +1,4 @@
-xdescribe('testr external stub', function() {
+describe('testr external stub', function() {
 
 	it('is used when flag is present', function() {
 		var hasDeps = testr('hasdeps', true);

@@ -41,12 +41,14 @@ var testr, define;
 	define = function() {
 		var args = [].slice.call(arguments),
 			factory = args.pop(),
-			depPaths = ['module'];
+			depPaths = ['module'],
+			pluginLocs = [];
 
 		// process the dependency ids
-		each(args.pop(), function(path) {
+		each(args.pop(), function(path, index) {
 			if (path.indexOf('!') > -1) {
 				pluginPaths[path.split('!')[0]] = true;
+				pluginLocs.push(index);
 			}
 			depPaths.push(path);
 		});
@@ -62,6 +64,13 @@ var testr, define;
  				return factory.apply(null, deps);
  			}
 
+ 			// alter plugin storage
+ 			each(pluginLocs, function(loc) {
+ 				var pluginLoaded = depPaths[loc + 1];
+ 				moduleMap[pluginLoaded] = deps[loc];
+ 				deps[loc] = pluginLoaded;
+ 			});
+
  			// save the module
 			moduleMap[module.id] = {
 				factory: factory,
@@ -74,11 +83,11 @@ var testr, define;
 			}
 
 			// auto load associated files
-			// require({
-			// 	context: module.id,
-			// 	baseUrl: '.',
-			// 	deps: ['stub/' + module.id + '.stub', 'spec/' + module.id + '.spec']
-			// });
+			require({
+				context: module.id,
+				baseUrl: '.',
+				deps: ['stub/' + module.id + '.stub', 'spec/' + module.id + '.spec']
+			});
 
 			// define the module as its path name, used by dependants
 			return module.id;
@@ -103,6 +112,11 @@ var testr, define;
 		// shortcuts
 		factory = moduleDef.factory;
 		deps = moduleDef.deps;
+
+		// return plugin resolved dependencies immediately
+		if (!factory) {
+			return moduleDef;
+		}
 
 		// load up dependencies
 		if (deps) {

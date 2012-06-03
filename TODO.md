@@ -1,3 +1,2 @@
-plugin support
-allow './' prefix in stub names
-test cases for 1.0.8 to include plugin tests
+allow './' prefix in stub object keys
+option to prevent auto spec and stub loading, helps avoid 404s in console

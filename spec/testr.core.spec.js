@@ -72,4 +72,13 @@ describe('testr', function() {
 
 	});
 
+	describe('plugins', function() {
+
+		it('takes full control of dependency resolution', function() {
+			var module = testr('needstext');
+			expect(module.template).toBe('<div>{{content}}</div>');
+		});
+
+	});
+
 });

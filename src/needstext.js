@@ -1,3 +1,5 @@
-define(['text!text.html'], function(text) {
-	template: text
+define(['text!template.html'], function(text) {
+	return {
+		template: text
+	};
 });

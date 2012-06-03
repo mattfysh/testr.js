@@ -28,6 +28,10 @@ Include the requirejs script before testr.js, and be sure to have a valid `data-
 
 *Note: If the spec or stub file does not exist, this will result in a 404 error. Feel free to fork this project and suppress these, if possible.*
 
+### Not Supported
+
+* Non-default contexts
+
 ### Example
 
 The module under test is described below.
