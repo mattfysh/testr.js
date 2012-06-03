@@ -1,3 +1,5 @@
+// TODO: allow samedir reference to './' in stubs
+
 describe('testr', function() {
 
 	it('doesnt execute modules during loading', function() {
@@ -56,11 +58,16 @@ describe('testr', function() {
 
 	});
 
-	describe('nested modules', function() {
+	describe('directory modules', function() {
 
 		it('can be grabbed directly', function() {
 			var deepDep = testr('deeper/isdep');
 			expect(deepDep.deep).toBe(true);
+		});
+
+		it('can be grabbed with the parent syntax', function() {
+			var module = testr('../sibling/outsidebase');
+			expect(module.outsideBase).toBe(true);
 		});
 
 	});

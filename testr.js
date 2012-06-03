@@ -4,7 +4,8 @@ var testr, define;
 
 	var origDefine = define,
 		noop = function() {},
-		moduleMap = {};
+		moduleMap = window.mm = {},
+		pluginPaths = window.pp = {};
 
 	// type detection
 	function isArray(a) {
@@ -28,6 +29,9 @@ var testr, define;
 
 	// each
 	function each(items, callback) {
+		if (!items) {
+			return;
+		}
 		for (var i = 0; i < items.length; i += 1) {
 			callback(items[i], i);
 		}
@@ -36,47 +40,59 @@ var testr, define;
 	// override define
 	define = function() {
 		var args = [].slice.call(arguments),
-			factory = args.pop();
+			factory = args.pop(),
+			depPaths = ['module'];
 
-		// use module as a dependency to get the module id
-		if(!args.length) {
-			args.push([]);
-		}
-		args[0].unshift('module');
+		// process the dependency ids
+		each(args.pop(), function(path) {
+			if (path.indexOf('!') > -1) {
+				pluginPaths[path.split('!')[0]] = true;
+			}
+			depPaths.push(path);
+		});
 
-		// capture the call to define the function
-		args.push(function(module) {
-			// extract dependency path names
+		// rewrite the function that requirejs executes when defining the module
+		function trojan(module) {
 			var deps = [].slice.call(arguments, 1),
-				i, type;
+				isPlugin = pluginPaths[module.id],
+				isStub = module.uri.indexOf('./stub') === 0;
 
-			// save the module
+ 			if (isPlugin) {
+ 				// give requirejs the real plugin
+ 				return factory.apply(null, deps);
+ 			}
+
+ 			// save the module
 			moduleMap[module.id] = {
 				factory: factory,
 				deps: deps
 			}
 
-			if (module.uri.indexOf('./stub') !== 0) {
-				// auto load associated files
-				require({
-					context: module.id,
-					baseUrl: '.',
-					deps: ['stub/' + module.id + '.stub', 'spec/' + module.id + '.spec']
-				});
-
-				// define the module as its path name, used by dependants
-				return module.id;
+			if (isStub) {
+				// stub has been saved to module map, no further processing needed
+				return;
 			}
-		});
 
-		// hook back into the loader to trigger dependency loading
-		origDefine.apply(null, args);
+			// auto load associated files
+			// require({
+			// 	context: module.id,
+			// 	baseUrl: '.',
+			// 	deps: ['stub/' + module.id + '.stub', 'spec/' + module.id + '.spec']
+			// });
+
+			// define the module as its path name, used by dependants
+			return module.id;
+		};
+
+		// hook back into the loader with modified dependancy paths
+		// to trigger dependency loading, and execute the trojan function
+		origDefine(depPaths, trojan);
 	};
 
 	// create modules on the fly with module map
 	function buildModule(moduleName, stubs, useExternal, subject) {
 		var depModules = [],
-			moduleDef, factory, deps, i;
+			moduleDef, factory, deps;
 
 		// get module definition from map
 		moduleDef = (!subject && useExternal && moduleMap['stub/' + moduleName + '.stub']) || moduleMap[moduleName];
