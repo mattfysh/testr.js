@@ -4,8 +4,8 @@ var testr, define;
 
 	var origDefine = define,
 		noop = function() {},
-		moduleMap = window.mm = {},
-		pluginPaths = window.pp = {};
+		moduleMap = {},
+		pluginPaths = {};
 
 	// type detection
 	function isArray(a) {
