@@ -38,7 +38,7 @@ testr.config({
 
 There is currently only one property available.
 
-**autoLoad**: prevents the automatic loading of associated `spec` and `stub` files. *Default: true*
+**autoLoad**: boolean to allow loading of associated `spec` and `stub` files. *Default: true*
 
 ### Not Supported
 
