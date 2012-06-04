@@ -1,5 +1,3 @@
-// TODO: allow samedir reference to './' in stubs
-
 describe('testr', function() {
 
 	it('doesnt execute modules during loading', function() {
@@ -58,6 +56,21 @@ describe('testr', function() {
 
 	});
 
+	describe('function with exports', function() {
+
+		it('uses exports object as module', function() {
+			module = testr('exports/uses');
+			expect(module.useExport).toBe(true);
+		});
+
+		it('always uses return value if it exists', function() {
+			module = testr('exports/returns');
+			expect(module.returnDefine).toBe(true);
+			expect(module.exportsDefine).toBeUndefined();
+		});
+
+	})
+
 	describe('directory modules', function() {
 
 		it('can be grabbed directly', function() {
@@ -75,8 +88,32 @@ describe('testr', function() {
 	describe('plugins', function() {
 
 		it('takes full control of dependency resolution', function() {
-			var module = testr('needstext');
+			var module = testr('plugins');
 			expect(module.template).toBe('<div>{{content}}</div>');
+		});
+
+		it ('can be stubbed', function() {
+			var module = testr('plugins', {
+				'text!template.html': 'stubbed'
+			});
+			expect(module.template).toBe('stubbed');
+		});
+
+		it('can be an object', function() {
+			var module = testr('plugins');
+			expect(module.asObjDep).toBe('plugin object loaded');
+		});
+
+	});
+
+	describe('renamed modules', function() {
+		
+		it('uses defined name', function() {
+			var origModule = testr('redef'),
+				module = testr('newdefname');
+
+			expect(origModule).toBeFalsy();
+			expect(module.redefined).toBe(true);
 		});
 
 	});

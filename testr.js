@@ -1,3 +1,8 @@
+/**
+ * testr.js 1.0.0
+ * https://www.github.com/mattfysh/testr.js
+ */
+
 var testr, define;
 
 (function() {
@@ -41,14 +46,25 @@ var testr, define;
 	define = function() {
 		var args = [].slice.call(arguments),
 			factory = args.pop(),
+			deps = args.pop(),
+			name = args.pop(),
 			depPaths = ['module'],
-			pluginLocs = [];
+			pluginLocs = [],
+			exportsLocs = [];
+
+		// account for signature variation
+		if (typeof deps === 'string') {
+			name = deps;
+			deps = [];
+		}
 
 		// process the dependency ids
-		each(args.pop(), function(path, index) {
+		each(deps, function(path, index) {
 			if (path.indexOf('!') > -1) {
 				pluginPaths[path.split('!')[0]] = true;
 				pluginLocs.push(index);
+			} else if (path === 'exports') {
+				exportsLocs.push(index);
 			}
 			depPaths.push(path);
 		});
@@ -61,7 +77,7 @@ var testr, define;
 
  			if (isPlugin) {
  				// give requirejs the real plugin
- 				return factory.apply(null, deps);
+ 				return (typeof factory === 'function') ? factory.apply(null, deps) : factory;
  			}
 
  			// alter plugin storage
@@ -69,6 +85,11 @@ var testr, define;
  				var pluginLoaded = depPaths[loc + 1];
  				moduleMap[pluginLoaded] = deps[loc];
  				deps[loc] = pluginLoaded;
+ 			});
+
+ 			// alter exports deps
+ 			each(exportsLocs, function(loc) {
+ 				deps[loc] = 'exports';
  			});
 
  			// save the module
@@ -95,18 +116,29 @@ var testr, define;
 
 		// hook back into the loader with modified dependancy paths
 		// to trigger dependency loading, and execute the trojan function
-		origDefine(depPaths, trojan);
+		if (name) {
+			origDefine(name, depPaths, trojan);
+			require([name]); // force requirejs to load the module immediately
+		} else {
+			origDefine(depPaths, trojan);
+		}
 	};
 
 	// create modules on the fly with module map
 	function buildModule(moduleName, stubs, useExternal, subject) {
 		var depModules = [],
+			exports = {},
 			moduleDef, factory, deps;
 
 		// get module definition from map
 		moduleDef = (!subject && useExternal && moduleMap['stub/' + moduleName + '.stub']) || moduleMap[moduleName];
 		if (!moduleDef) {
-			throw Error('module has not been loaded: ' + moduleName);
+			// module may be stored in requirejs
+			try {
+				return require(moduleName);
+			} catch(e) {
+				throw new Error('module has not been loaded: ' + moduleName);
+			}
 		}
 
 		// shortcuts
@@ -119,15 +151,25 @@ var testr, define;
 		}
 
 		// load up dependencies
-		if (deps) {
-			each(deps, function(depName) {
-				var dep = stubs && stubs[depName] || buildModule(depName, stubs, useExternal);
-				depModules.push(dep);
-			});
-		}
+		each(deps, function(depName) {
+			// determine what to pass to the factory
+			var dep = (depName === 'exports') ?
+						exports :
+						(stubs && stubs[depName]) ?
+							stubs[depName] :
+							buildModule(depName, stubs, useExternal);
 
-		// return clean instance of module
-		return (typeof factory === 'function') ? factory.apply(null, depModules) : deepCopy(factory);
+			// add dependency to array
+			depModules.push(dep);
+		});
+
+		if (typeof factory !== 'function') {
+			// return clean copy of module object
+			return deepCopy(factory);
+		} else {
+			// return clean instance of module
+			return factory.apply(exports, depModules) || exports;
+		}
 	}
 
 	// define API
@@ -148,5 +190,8 @@ var testr, define;
 		// build the module under test
 		return buildModule(moduleName, stubs, useExternal, true);
 	}
+
+	// copy amd properties
+	define.amd = origDefine.amd;
 
 }());
