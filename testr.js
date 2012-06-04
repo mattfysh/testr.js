@@ -1,6 +1,7 @@
 /**
- * testr.js 1.0.0
+ * testr.js 1.0.1
  * https://www.github.com/mattfysh/testr.js
+ * Distributed under the MIT license
  */
 
 var testr, define;
@@ -10,7 +11,10 @@ var testr, define;
 	var origDefine = define,
 		noop = function() {},
 		moduleMap = {},
-		pluginPaths = {};
+		pluginPaths = {},
+		config = {
+			autoLoad: true
+		};
 
 	// type detection
 	function isArray(a) {
@@ -71,20 +75,16 @@ var testr, define;
 
 		// rewrite the function that requirejs executes when defining the module
 		function trojan(module) {
-			var deps = [].slice.call(arguments, 1),
-				isPlugin = pluginPaths[module.id],
-				isStub = module.uri.indexOf('./stub') === 0;
+			var deps = [].slice.call(arguments, 1);
 
- 			if (isPlugin) {
- 				// give requirejs the real plugin
+ 			if (!module || pluginPaths[module.id]) {
+ 				// jquery or plugin, give requirejs the real module
  				return (typeof factory === 'function') ? factory.apply(null, deps) : factory;
  			}
 
  			// alter plugin storage
  			each(pluginLocs, function(loc) {
- 				var pluginLoaded = depPaths[loc + 1];
- 				moduleMap[pluginLoaded] = deps[loc];
- 				deps[loc] = pluginLoaded;
+ 				deps[loc] = depPaths[loc + 1];
  			});
 
  			// alter exports deps
@@ -98,33 +98,38 @@ var testr, define;
 				deps: deps
 			}
 
-			if (isStub) {
+			if (module.uri.indexOf('./stub') === 0) {
 				// stub has been saved to module map, no further processing needed
 				return;
 			}
 
 			// auto load associated files
-			require({
-				context: module.id,
-				baseUrl: '.',
-				deps: ['stub/' + module.id + '.stub', 'spec/' + module.id + '.spec']
-			});
-
+			if (config.autoLoad) {
+				require({
+					context: module.id,
+					baseUrl: '.',
+					deps: ['stub/' + module.id + '.stub', 'spec/' + module.id + '.spec']
+				});
+			}
+			
 			// define the module as its path name, used by dependants
 			return module.id;
 		};
 
 		// hook back into the loader with modified dependancy paths
-		// to trigger dependency loading, and execute the trojan function
+		// to trigger dependency loading, and execute the trojan
 		if (name) {
 			origDefine(name, depPaths, trojan);
-			require([name]); // force requirejs to load the module immediately
+			require([name]); // force requirejs to load the module immediately and call the trojan
 		} else {
 			origDefine(depPaths, trojan);
 		}
 	};
 
-	// create modules on the fly with module map
+	// copy amd properties
+	define.amd = origDefine.amd;
+
+	// create new modules with the factory
 	function buildModule(moduleName, stubs, useExternal, subject) {
 		var depModules = [],
 			exports = {},
@@ -133,7 +138,7 @@ var testr, define;
 		// get module definition from map
 		moduleDef = (!subject && useExternal && moduleMap['stub/' + moduleName + '.stub']) || moduleMap[moduleName];
 		if (!moduleDef) {
-			// module may be stored in requirejs
+			// module may be stored in requirejs, e.g. plugin-loaded dependencies
 			try {
 				return require(moduleName);
 			} catch(e) {
@@ -144,11 +149,6 @@ var testr, define;
 		// shortcuts
 		factory = moduleDef.factory;
 		deps = moduleDef.deps;
-
-		// return plugin resolved dependencies immediately
-		if (!factory) {
-			return moduleDef;
-		}
 
 		// load up dependencies
 		each(deps, function(depName) {
@@ -172,7 +172,7 @@ var testr, define;
 		}
 	}
 
-	// define API
+	// testr API
 	testr = function(moduleName, stubs, useExternal) {
 		// check module name
 		if (typeof moduleName !== 'string') {
@@ -191,7 +191,13 @@ var testr, define;
 		return buildModule(moduleName, stubs, useExternal, true);
 	}
 
-	// copy amd properties
-	define.amd = origDefine.amd;
+	// testr config
+	testr.config = function(userConfig) {
+		for (var p in userConfig) {
+			if (userConfig.hasOwnProperty(p)) {
+				config[p] = userConfig[p];
+			};
+		}
+	}
 
 }());

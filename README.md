@@ -28,6 +28,18 @@ Include the requirejs script before testr.js, and be sure to have a valid `data-
 
 *Note: If the spec or stub file does not exist, this will result in a 404 error. Feel free to fork this project and suppress these, if possible.*
 
+### Configuration
+
+```javascript
+testr.config({
+	property: value
+});
+```
+
+There is currently only one property available.
+
+**autoLoad**: prevents the automatic loading of associated `spec` and `stub` files. *Default: true*
+
 ### Not Supported
 
 * Non-default contexts

@@ -10,4 +10,29 @@ describe('testr config', function() {
 		expect(module.siblingPathTarget).toBe(true);
 	});
 
+	it('can disable auto-loading', function() {
+		// override
+		var origRequire = require,
+			called = false;
+		require = function(req) {
+			if (req && req.deps) {
+				called = true;
+			}
+		}
+
+		// configure testr then define a module
+		testr.config({
+			autoLoad: false
+		});
+		define('disableAutoLoad', {});
+
+		// return to original state
+		testr.config({
+			autoLoad: true // return to default behavior
+		});
+		require = origRequire;
+
+		expect(called).toBe(false);
+	});
+
 });

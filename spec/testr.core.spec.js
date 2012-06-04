@@ -109,12 +109,51 @@ describe('testr', function() {
 	describe('renamed modules', function() {
 		
 		it('uses defined name', function() {
-			var origModule = testr('redef'),
+			var origModule = testr('rename/def'),
 				module = testr('newdefname');
 
 			expect(origModule).toBeFalsy();
 			expect(module.redefined).toBe(true);
 		});
+
+		it('can be pulled in as real deps', function() {
+			var module = testr('rename/use');
+			expect(module.dep.redefined).toBe(true);
+		});
+
+		it('can be stubbed in the stub object', function() {
+			var module = testr('rename/use', {
+				'newdefname': 'stubbed'
+			});
+			expect(module.dep).toBe('stubbed');
+		});
+
+		it('can be externally stubbed', function() {
+			var module = testr('rename/use', true);
+			expect(module.dep.isExternalStub).toBe(true);
+		});
+
+	});
+
+	describe('jquery', function() {
+
+		it('can be used', function() {
+			var module = testr('usejquery'),
+				heading = module.getHeading();
+			expect(heading.text()).toContain('Jasmine Spec Runner');
+		});
+
+		it('can be stubbed', function() {
+			var called = false;
+				module = testr('usejquery', {
+					'jquery': function() {
+						return 'stubbed'
+					}
+				}),
+				heading = module.getHeading();
+				
+			expect(heading).toBe('stubbed');
+		})
 
 	});
 
