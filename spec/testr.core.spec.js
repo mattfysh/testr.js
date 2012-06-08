@@ -58,6 +58,8 @@ describe('testr', function() {
 
 	describe('function with exports', function() {
 
+		var module;
+
 		it('uses exports object as module', function() {
 			module = testr('exports/uses');
 			expect(module.useExport).toBe(true);
@@ -69,7 +71,23 @@ describe('testr', function() {
 			expect(module.exportsDefine).toBeUndefined();
 		});
 
-	})
+	});
+
+	describe('function with require', function() {
+
+		it('correctly resolves path', function() {
+			var module = testr('require/uses');
+			expect(module.dep.objectDef).toBe(true);
+		});
+
+		it('allows nested requires to be stubbed', function() {
+			var module = testr('require/uses', {
+				'./../obj': 'stubbed'
+			});
+			expect(module.dep).toBe('stubbed');
+		});
+
+	});
 
 	describe('directory modules', function() {
 
@@ -88,19 +106,19 @@ describe('testr', function() {
 	describe('plugins', function() {
 
 		it('takes full control of dependency resolution', function() {
-			var module = testr('plugins');
+			var module = testr('plugins/uses');
 			expect(module.template).toBe('<div>{{content}}</div>');
 		});
 
 		it ('can be stubbed', function() {
-			var module = testr('plugins', {
-				'text!template.html': 'stubbed'
+			var module = testr('plugins/uses', {
+				'text!./template.html': 'stubbed'
 			});
 			expect(module.template).toBe('stubbed');
 		});
 
 		it('can be an object', function() {
-			var module = testr('plugins');
+			var module = testr('plugins/uses');
 			expect(module.asObjDep).toBe('plugin object loaded');
 		});
 
@@ -154,6 +172,27 @@ describe('testr', function() {
 				
 			expect(heading).toBe('stubbed');
 		})
+
+	});
+
+	describe('with CJS wrapper', function() {
+
+		it('picks up nested require', function() {
+			var module = testr('cjs/wrap');
+			expect(module.objDep.cjs).toBe(true);
+		});
+
+		it('still allows stubbing', function() {
+			var module = testr('cjs/wrap', {
+				'cjs/obj': 'stubbed'
+			});
+			expect(module.objDep).toBe('stubbed');
+		});
+
+		it('can pickup relative paths', function() {
+			var module = testr('cjs/wrap');
+			expect(module.samedir.cjs).toBe(true);
+		});
 
 	});
 

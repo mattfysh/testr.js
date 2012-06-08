@@ -63,6 +63,13 @@ describe('testr with stubs', function() {
 		});
 		expect(module.stubbed).toBeUndefined();
 	});
+
+	it('allows relative paths', function() {
+		module = testr('hasdeps', {
+			'./isdep': stubDep
+		});
+		expect(module.dep.isStubbed).toBe(true);
+	});
 	
 });
 

@@ -14,7 +14,7 @@ testr('path/to/module', useExternal);
 testr('path/to/module', stubs, useExternal);
 ```
 
-**stubs**: *(optional)* a collection of stubs to use in place of dependencies. Each key is the requirejs path name of the module to be stubbed; each value is the stub.
+**stubs**: *(optional)* a collection of stubs to use in place of dependencies. Each key is the requirejs path name of the module to be stubbed; each value is the stub. The key may also be relative to the test module path, i.e. beginning with `./`.
 
 **useExternal**: *(optional)* a boolean to indicate if you wish to load in stubs from an external file. See the *Setup* section for details on where the external stub files should be placed.
 
@@ -38,7 +38,7 @@ testr.config({
 
 There is currently only one property available.
 
-**autoLoad**: boolean to allow loading of associated `spec` and `stub` files. *Default: true*
+**autoLoad**: boolean to allow loading of associated `spec` and `stub` files. *Default: false*
 
 ### Not Supported
 

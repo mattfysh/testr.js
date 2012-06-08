@@ -9,7 +9,10 @@ require.config({
 });
 
 // basic require
-require(['fn', 'obj', 'hasdeps', 'plugins', 'usejquery']);
+require(['fn', 'obj', 'hasdeps', 'require/uses']);
+
+// advanced
+require(['plugins/uses', 'usejquery', 'cjs/wrap']);
 
 // advanced module names
 require(['path', '../sibling/outsidebase', 'sibling/pathtarget', 'rename/def', 'rename/use']);

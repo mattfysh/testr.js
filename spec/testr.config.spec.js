@@ -1,5 +1,15 @@
 describe('testr config', function() {
 
+	var origRequire = require;
+
+	afterEach(function() {
+		// return to original state
+		require = origRequire;
+		testr.config({
+			autoLoad: true
+		});
+	});
+
 	it('loads modules from path', function() {
 		var module = testr('path');
 		expect(module.viaPath).toBe(true);
@@ -14,6 +24,8 @@ describe('testr config', function() {
 		// override
 		var origRequire = require,
 			called = false;
+
+		// redefine require to capture any calls made
 		require = function(req) {
 			if (req && req.deps) {
 				called = true;
@@ -25,12 +37,6 @@ describe('testr config', function() {
 			autoLoad: false
 		});
 		define('disableAutoLoad', {});
-
-		// return to original state
-		testr.config({
-			autoLoad: true // return to default behavior
-		});
-		require = origRequire;
 
 		expect(called).toBe(false);
 	});

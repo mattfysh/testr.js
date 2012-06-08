@@ -1,1 +1,0 @@
-allow './' prefix in stub object keys
