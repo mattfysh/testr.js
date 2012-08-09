@@ -32,13 +32,14 @@ Include the requirejs script before testr.js, and be sure to have a valid `data-
 
 ```javascript
 testr.config({
-	property: value
+	autoLoad: true,
+	whitelist: ['path/to/allowed/actual', 'underscore', 'backbone']
 });
 ```
 
-There is currently only one property available.
-
 **autoLoad**: boolean to allow loading of associated `spec` and `stub` files. *Default: false*
+
+**whitelist**: an array of paths that are allowed as actual dependencies. All other modules must be stubbed. *Default: off*
 
 ### Not Supported
 

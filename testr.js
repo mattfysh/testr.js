@@ -178,13 +178,30 @@ var testr, define;
 	function buildModule(moduleName, stubs, useExternal, subject) {
 		var depModules = [],
 			exports = {},
-			moduleDef, factory, deps, contextReq,
+			mustBeStubbed = config.whitelist && config.whitelist.length,
+			moduleDef, externalStub, factory, deps, contextReq,
 			getModule = function(depName) {
 				return stubs && stubs[depName] || buildModule(depName, stubs, useExternal);
 			};
 
+		// get external stub
+		externalStub = !subject && useExternal && moduleMap['stub/' + moduleName + '.stub'];
+
+		// throw error if module must be stubbed
+		if (mustBeStubbed && !subject && !externalStub) {
+			each(config.whitelist, function(allowedActual) {
+				debugger;
+				if (moduleName === allowedActual) {
+					mustBeStubbed = false;
+				}
+			});
+			if (mustBeStubbed) {
+				throw new Error('module must be stubbed: ' + moduleName);
+			}
+		}
+
 		// get module definition from map
-		moduleDef = (!subject && useExternal && moduleMap['stub/' + moduleName + '.stub']) || moduleMap[moduleName];
+		moduleDef = externalStub || moduleMap[moduleName];
 		if (!moduleDef) {
 			// module may be stored in requirejs, e.g. plugin-loaded dependencies
 			try {

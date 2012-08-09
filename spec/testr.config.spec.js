@@ -6,7 +6,8 @@ describe('testr config', function() {
 		// return to original state
 		require = origRequire;
 		testr.config({
-			autoLoad: true
+			autoLoad: true,
+			whitelist: []
 		});
 	});
 
@@ -40,5 +41,28 @@ describe('testr config', function() {
 
 		expect(called).toBe(false);
 	});
+
+	it('allows actual dependencies for white list', function() {
+		// configure whitelist
+		testr.config({
+			whitelist: ['deeper/samedir']
+		});
+
+		// the following should not error
+		testr('deeper/isdep');
+	});
+
+	it('errors when using non-whitelisted actual dependencies', function() {
+		function getModule() {
+			testr('deeper/isdep');
+		}
+
+		// configure whitelist
+		testr.config({
+			whitelist: ['deeper/someotherdep']
+		});
+
+		expect(getModule).toThrow(Error('module must be stubbed: deeper/samedir'));
+	})
 
 });
