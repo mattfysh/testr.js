@@ -12,6 +12,7 @@
     "baseDir": "lib",
     "dependencies": {
       "require": "github:jrburke/requirejs/2.0.5"
-    }
+    },
+    "url": "https://raw.github.com/mattfysh/testr.js/v{version}/testr.js"
   }
 }
