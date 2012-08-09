@@ -190,7 +190,6 @@ var testr, define;
 		// throw error if module must be stubbed
 		if (mustBeStubbed && !subject && !externalStub) {
 			each(config.whitelist, function(allowedActual) {
-				debugger;
 				if (moduleName === allowedActual) {
 					mustBeStubbed = false;
 				}
