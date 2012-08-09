@@ -63,6 +63,18 @@ describe('testr config', function() {
 		});
 
 		expect(getModule).toThrow(Error('module must be stubbed: deeper/samedir'));
-	})
+	});
+
+	it('does not error when stubbing non-whitelisted dependencies', function() {
+		// configure whitelist
+		testr.config({
+			whitelist: ['deeper/someotherdep']
+		});
+
+		// the following should not error
+		testr('deeper/isdep', {
+			'./samedir': {}
+		});
+	});
 
 });
