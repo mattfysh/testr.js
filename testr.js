@@ -1,5 +1,5 @@
 /**
- * testr.js 1.0.2
+ * testr.js 1.0.3
  * https://www.github.com/mattfysh/testr.js
  * Distributed under the MIT license
  */
@@ -7,7 +7,7 @@
 var testr, define;
 
 (function() {
-	var version = '1.0.2',
+	var version = '1.0.3',
 		origDefine = define,
 		cjsRequireRegExp = /require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
 		noop = function() {},
