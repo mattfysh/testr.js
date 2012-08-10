@@ -1,6 +1,6 @@
 {
   "name": "testrjs",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "author": "Matt Fysh <mattfysh@gmail.com>",
   "description": "Unit testing require.js modules, with both stubbed and script-loaded dependencies.",
   "repository": {
