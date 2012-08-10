@@ -81,6 +81,7 @@ describe('testr config', function() {
 		function getModule() {
 			testr('hasdeps');
 		}
+		
 		// configure whitelist
 		testr.config({
 			whitelist: ['underscore']
