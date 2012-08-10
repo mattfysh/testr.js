@@ -11,7 +11,7 @@ var testr, define;
 		origDefine = define,
 		cjsRequireRegExp = /require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
 		noop = function() {},
-		moduleMap = window.mm = {},
+		moduleMap = {},
 		pluginPaths = {},
 		baseUrl = require.toUrl('.').replace(/\.$/, ''),
 		config = {
@@ -290,6 +290,11 @@ var testr, define;
 			config[key] = val;
 		});
 	};
+
+	// disable
+	testr.disable = function() {
+		window.define = origDefine;
+	}
 
 	// attach version
 	testr.version = version;
