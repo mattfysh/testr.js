@@ -175,13 +175,13 @@ var testr, define;
 	define.amd = origDefine.amd;
 
 	// create new modules with the factory
-	function buildModule(moduleName, stubs, useExternal, subject) {
+	function buildModule(moduleName, stubs, useExternal, subject, whitelistExceptions) {
 		var depModules = [],
 			exports = {},
 			mustBeStubbed = config.whitelist && config.whitelist.length,
 			moduleDef, externalStub, factory, deps, contextReq,
 			getModule = function(depName) {
-				return stubs && stubs[depName] || buildModule(depName, stubs, useExternal);
+				return stubs && stubs[depName] || buildModule(depName, stubs, useExternal, false, whitelistExceptions);
 			};
 
 		// get external stub
@@ -195,7 +195,8 @@ var testr, define;
 				}
 			});
 			if (mustBeStubbed) {
-				throw new Error('module must be stubbed: ' + moduleName);
+				whitelistExceptions.push(moduleName);
+				return {};
 			}
 		}
 
@@ -254,6 +255,9 @@ var testr, define;
 
 	// testr API
 	testr = function(moduleName, stubs, useExternal) {
+		var whitelistExceptions = [],
+			module, plural;
+
 		// check module name
 		if (typeof moduleName !== 'string') {
 			throw Error('module name must be a string');
@@ -268,7 +272,16 @@ var testr, define;
 		}
 
 		// build the module under test
-		return buildModule(moduleName, stubs, useExternal, true);
+		module = buildModule(moduleName, stubs, useExternal, true, whitelistExceptions);
+
+		// throw error if not all required stubs provided
+		if (whitelistExceptions.length) {
+			plural = (whitelistExceptions.length > 1) ? 's' : ''
+			throw Error('module' + plural + ' must be stubbed: ' + whitelistExceptions.join(', '));
+		}
+
+		// return the module
+		return module;
 	};
 
 	// testr config

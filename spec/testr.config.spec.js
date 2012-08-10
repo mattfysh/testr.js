@@ -77,4 +77,29 @@ describe('testr config', function() {
 		});
 	});
 
+	it('reports multiple whitelist exceptions', function() {
+		function getModule() {
+			testr('hasdeps');
+		}
+		// configure whitelist
+		testr.config({
+			whitelist: ['underscore']
+		});
+
+		expect(getModule).toThrow(Error('modules must be stubbed: isdep, obj'));
+	});
+
+	it('reports whitelist exceptions on deeper dependencies', function() {
+		function getModule() {
+			testr('hasdeps');
+		}
+
+		// configure whitelist
+		testr.config({
+			whitelist: ['isdep']
+		});
+
+		expect(getModule).toThrow(new Error('modules must be stubbed: deeper/isdep, obj'));
+	});
+
 });
