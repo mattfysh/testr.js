@@ -1,5 +1,5 @@
 /**
- * testr.js 1.0.4
+ * testr.js 1.1.0
  * https://www.github.com/mattfysh/testr.js
  * Distributed under the MIT license
  */
@@ -7,13 +7,12 @@
 var testr, define;
 
 (function() {
-	var version = '1.0.4',
+	var version = '1.1.0',
 		origDefine = define,
 		cjsRequireRegExp = /require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
 		noop = function() {},
 		moduleMap = {},
 		pluginPaths = {},
-		baseUrl = require.toUrl('.').replace(/\.$/, ''),
 		config = {
 			autoLoad: false
 		};
@@ -54,6 +53,7 @@ var testr, define;
 
 	// normalize paths
 	function normalize(path, contextReq) {
+		var baseUrl = require.toUrl('.').replace(/\.$/, '');
 		if (path.indexOf('!') === -1) {
 			// regular path
 			return contextReq(path);
@@ -174,6 +174,11 @@ var testr, define;
 	// copy amd properties
 	define.amd = origDefine.amd;
 
+	// allow restoration of original define function
+	define.restore = function() {
+		window.define = origDefine;
+	}
+
 	// create new modules with the factory
 	function buildModule(moduleName, stubs, useExternal, subject, whitelistExceptions) {
 		var depModules = [],
@@ -290,11 +295,6 @@ var testr, define;
 			config[key] = val;
 		});
 	};
-
-	// disable
-	testr.disable = function() {
-		window.define = origDefine;
-	}
 
 	// attach version
 	testr.version = version;

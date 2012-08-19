@@ -43,13 +43,17 @@ describe('testr config', function() {
 	});
 
 	it('allows actual dependencies for white list', function() {
+		function getModule() {
+			testr('deeper/isdep');
+		}
+
 		// configure whitelist
 		testr.config({
 			whitelist: ['deeper/samedir']
 		});
 
 		// the following should not error
-		testr('deeper/isdep');
+		expect(getModule).not.toThrow();
 	});
 
 	it('errors when using non-whitelisted actual dependencies', function() {
@@ -66,15 +70,19 @@ describe('testr config', function() {
 	});
 
 	it('does not error when stubbing non-whitelisted dependencies', function() {
+		function getModule() {
+			testr('deeper/isdep', {
+				'./samedir': {}
+			});
+		}
+		
 		// configure whitelist
 		testr.config({
 			whitelist: ['deeper/someotherdep']
 		});
 
 		// the following should not error
-		testr('deeper/isdep', {
-			'./samedir': {}
-		});
+		expect(getModule).not.toThrow();
 	});
 
 	it('reports multiple whitelist exceptions', function() {

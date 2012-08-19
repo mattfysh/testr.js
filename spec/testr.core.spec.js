@@ -155,6 +155,17 @@ describe('testr', function() {
 
 	describe('jquery', function() {
 
+		var h1 = document.createElement('h1');
+		h1.innerHTML = 'Jasmine Spec Runner';
+
+		beforeEach(function() {
+			document.body.appendChild(h1);
+		});
+
+		afterEach(function() {
+			document.body.removeChild(h1);
+		})
+
 		it('can be used', function() {
 			var module = testr('usejquery'),
 				heading = module.getHeading();

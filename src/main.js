@@ -1,6 +1,6 @@
 (function() {
-	// create paths
-	var paths = {
+	var baseUrl = 'src',
+		paths = {
 			'path': 'pathtarget',
 			'sibling': '../sibling',
 			'text': '../lib/plugins/require/text.' + (require.version === '1.0.8' ? '1.0.8' : '2.0.0'),
@@ -8,59 +8,58 @@
 			'jquery': '../lib/jquery-1.7.2'
 		},
 		required = [],
-		jasmineEnv = jasmine.getEnv();
+		allLoaded = false,
+		count = 0;
 
-	function requireSet(set) {
-		required = required.concat(set);
-		require(set);
+	function requireSet(set, callback) {
+		required.push.apply(required, set);
+		require(set, callback);
+	}
+
+	function checkLoaded() {
+		count += 1;
+		if (count === 2) {
+			testrApp.onload();
+		}
 	}
 
 	require.config({
-		paths: paths
+		paths: paths,
+		baseUrl: baseUrl
+	});
+
+	testr.config({
+		autoLoad: true
 	});
 
 	// basic require
-	requireSet(['fn', 'obj', 'hasdeps', 'require/uses']);
+	requireSet(['fn', 'obj', 'hasdeps'], function() {
+		// has dependency on obj
+		requireSet(['require/uses'], function() {
+			checkLoaded();
+		});
+	});
 
 	// advanced
 	requireSet(['plugins/uses', 'usejquery', 'cjs/wrap']);
 
 	// advanced module names
-	requireSet(['path', '../sibling/outsidebase', 'sibling/pathtarget', 'rename/def', 'rename/use']);
+	requireSet(['path', '../sibling/outsidebase', 'sibling/pathtarget', 'rename/def'], function() {
+		// has dependency on rename/def
+		requireSet(['rename/use'], function() {
+			checkLoaded();
+		});
+	});
 
 	// exports
 	requireSet(['exports/uses', 'exports/returns']);
 
-	// setup a new context for collection the actual objects
-	actuals = require.config({
-		context: 'actuals',
+	// export the set of required modules
+	window.testrApp = {
+		required: required,
 		paths: paths,
-		baseUrl: 'src'
-	});
-
-	// once the main suite of tests has completed, verify testr modules against actuals
-	jasmineEnv.currentRunner_.finishCallback = function() {
-		// prevent infinite loop
-		jasmineEnv.currentRunner_.finishCallback = function() {};
-
-		// disable testr
-		testr.disable();
-
-		// request all the modules with a fresh context
-		actuals(required, function() {
-			// setup a test for each module
-			describe('module verification', function() {
-				for (var i = 0; i < required.length; i += 1) {
-					var moduleName = required[i];
-					it(moduleName, function() {
-						expect(testr(moduleName)).toEqual(actuals(moduleName));
-					});
-				}
-			});
-
-			// execute the module verification tests
-			jasmineEnv.execute();
-		});
-	};
+		baseUrl: baseUrl,
+		onload: function() {}
+	}
 
 }());

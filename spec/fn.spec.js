@@ -8,6 +8,7 @@ describe('fn module', function() {
 
 	it('has spec auto-loaded by testr', function() {
 		// running of test proves this
+		expect(true).toBe(true);
 	});
 
 	it('loads', function() {
