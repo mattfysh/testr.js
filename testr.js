@@ -14,7 +14,9 @@ var testr, define;
 		moduleMap = {},
 		pluginPaths = {},
 		config = {
-			autoLoad: false
+			autoLoad: false,
+			specUrl: 'spec',
+			stubUrl: 'stub'
 		};
 
 	// type detection
@@ -142,17 +144,27 @@ var testr, define;
 				require: contextReq
 			};
 
-			if (module.uri.indexOf('./stub') === 0) {
+			if (module.uri.indexOf('./'+config.stubUrl) === 0) {
 				// stub has been saved to module map, no further processing needed
 				return;
 			}
 
 			// auto load associated files
 			if (config.autoLoad) {
+				var autoDeps = [];
+				var loadAll = typeof config.autoLoad === 'boolean' || config.autoLoad === 'all';
+
+				if (loadAll || config.autoLoad === "stub") {
+					autoDeps.push(config.stubUrl + '/' + module.id + '.stub')
+				}
+				if (loadAll || config.autoLoad === "spec") {
+					autoDeps.push(config.specUrl + '/' + module.id + '.spec')
+				}
+
 				require({
 					context: module.id,
 					baseUrl: '.',
-					deps: ['stub/' + module.id + '.stub', 'spec/' + module.id + '.spec']
+					deps: autoDeps
 				});
 			}
 			
@@ -190,7 +202,7 @@ var testr, define;
 			};
 
 		// get external stub
-		externalStub = !subject && useExternal && moduleMap['stub/' + moduleName + '.stub'];
+		externalStub = !subject && useExternal && moduleMap[config.stubUrl + '/' + moduleName + '.stub'];
 
 		// throw error if module must be stubbed
 		if (mustBeStubbed && !subject && !externalStub) {

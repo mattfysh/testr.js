@@ -32,12 +32,18 @@ Include the requirejs script before testr.js, and be sure to have a valid `data-
 
 ```javascript
 testr.config({
-	autoLoad: true,
+	autoLoad: 'all',
+	specUrl: 'spec',
+	stubUrl: 'stub',
 	whitelist: ['path/to/allowed/actual', 'underscore', 'backbone']
 });
 ```
 
-**autoLoad**: boolean to allow loading of associated `spec` and `stub` files. *Default: false*
+**autoLoad**: boolean or string to allow loading of associated `spec` and `stub` files. Allowed values are true, false, 'spec', 'stub', 'all'. The 'all' value is the same as true. *Default: false*
+
+**specUrl**: path relative to your spec runner where spec files should be auto loaded from. *Default: spec*
+
+**stubUrl**: path relative to your spec runner where stub files should be auto loaded from. *Default: stub*
 
 **whitelist**: an array of paths that are allowed as actual dependencies. All other modules must be stubbed. *Default: off*
 
