@@ -20,7 +20,7 @@ testr('path/to/module', stubs, useExternal);
 
 ### Setup
 
-Include the requirejs script before testr.js, and be sure to have a valid `data-main` attribute that points to your application's top-level require call. Once all source code has been loaded, testr.js will automatically attempt to load all spec and external stub files. These will use an identical path, with a configurable base url. For example:
+Include the requirejs script before testr.js, and do not pre-define `require`, or use the `data-main` attribute. testr.js will monkey-patch the `require` and `define` methods, and enable your module definitions to be captured. Once all source code has been loaded, testr.js can be configured to attempt an automatic load of all spec and external stub files. These will use an identical path, with a configurable base url. For example:
 
 > **Source**: /src/path/to/module.js  
 > **Spec**: /spec/path/to/module.spec.js  
@@ -38,7 +38,7 @@ testr.config({
 });
 ```
 
-**specBaseUrl** and **stubBaseUrl**: when these base URLs are present, they will be used to automatically load spec and stub files. Each resource loaded will use the module definition paths, with these base URLs prefixed.
+**specBaseUrl** and **stubBaseUrl**: when these base URLs are present, they will be used to automatically load spec and stub files. Each resource loaded will use the module definition paths, with these base URLs prefixed (see Setup, above).
 
 **whitelist**: an array of paths that are allowed as actual dependencies. All other modules must be stubbed.
 
