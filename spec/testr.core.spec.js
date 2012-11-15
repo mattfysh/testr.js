@@ -207,4 +207,37 @@ describe('testr', function() {
 
 	});
 
+	describe('lazy loading', function() {
+
+		it('pulls in modules asynchronously', function() {
+			var module = testr('lazy');
+			module.load();
+			expect(module.obj).toBeUndefined();
+
+			waitsFor(function() {
+				return module.obj;
+			}, 'lazy loading module should set property definition', 100);
+
+			runs(function() {
+				expect(module.obj.objectDef).toBe(true);
+			});
+		});
+
+		it('can use the stubs object', function() {
+			var module = testr('lazy', {
+				'obj': 'stubbed'
+			});
+			module.load();
+
+			waitsFor(function() {
+				return module.obj;
+			}, 'lazy loading module should set property definition', 100);
+
+			runs(function() {
+				expect(module.obj).toBe('stubbed');
+			});
+		})
+
+	});
+
 });

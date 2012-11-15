@@ -29,11 +29,12 @@
 	});
 
 	testr.config({
-		autoLoad: true
+		specBaseUrl: 'spec',
+		stubBaseUrl: 'stub'
 	});
 
 	// basic require
-	requireSet(['fn', 'obj', 'hasdeps'], function() {
+	requireSet(['fn', 'obj', 'hasdeps', 'lazy'], function() {
 		// has dependency on obj
 		requireSet(['require/uses'], function() {
 			checkLoaded();

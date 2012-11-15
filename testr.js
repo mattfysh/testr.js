@@ -1,27 +1,26 @@
 /**
- * testr.js 1.1.0
+ * testr.js 1.2.0
  * https://www.github.com/mattfysh/testr.js
  * Distributed under the MIT license
  */
 
-var testr, define;
+var testr, define, require;
 
 (function() {
-	var version = '1.1.0',
+	var version = '1.2.0',
+		origRequire = require,
 		origDefine = define,
 		cjsRequireRegExp = /require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
 		noop = function() {},
 		moduleMap = {},
 		pluginPaths = {},
-		config = {
-			autoLoad: false,
-			specUrl: 'spec',
-			stubUrl: 'stub'
-		};
+		config = {},
+		running = false,
+		lazy;
 
 	// type detection
 	function isArray(a) {
-		return toString.call(a) == '[object Array]';
+		return Object.prototype.toString.call(a) == '[object Array]';
 	}
 	function isObject(o) {
 		return typeof o === 'object' && !isArray(o);
@@ -40,11 +39,11 @@ var testr, define;
 	function each(items, callback) {
 		if (!items) {
 			return;
-		} else if (typeof items.length === 'number') {
+		} else if (isArray(items)) {
 			for (var i = 0; i < items.length; i += 1) {
 				callback(items[i], i);
 			}
-		} else if (isObject(items)) {
+		} else {
 			for (var prop in items) {
 				if (items.hasOwnProperty(prop)) {
 					callback(items[prop], prop);
@@ -68,6 +67,26 @@ var testr, define;
 			return path.join('!');
 		}
 	}
+
+	// override require
+	require = function(deps, callback) {
+		if (typeof deps === 'string') {
+			// requesting internal or plugin module
+			return origRequire(deps);
+		} else if (running) {
+			// lazy loading modules async
+			setTimeout(function() {
+				var actuals = [];
+				each(deps, function(depName) {
+					actuals.push(lazy(depName));
+				});
+				callback.apply(null, actuals);
+			}, 0);
+		} else {
+			// calls made to load modules, before tests are executed
+			origRequire(deps, callback);
+		}
+	};
 
 	// override define
 	define = function() {
@@ -113,54 +132,51 @@ var testr, define;
 		// rewrite the function that requirejs executes when defining the module
 		function trojan(contextReq, module) {
 			var offset = 2,
-				deps = [].slice.call(arguments, offset);
+				deps = [].slice.call(arguments, offset),
+				autoDeps = [];
 
- 			if (!module || pluginPaths[module.id]) {
- 				// jquery or plugin, give requirejs the real module
- 				return (typeof factory === 'function') ? factory.apply(null, deps) : factory;
- 			}
+			if (!module || pluginPaths[module.id]) {
+				// jquery or plugin, give requirejs the real module
+				return (typeof factory === 'function') ? factory.apply(null, deps) : factory;
+			}
 
- 			// alter plugin storage
- 			each(pluginLocs, function(loc) {
- 				// normalize path names
- 				var path = depPaths[loc + offset];
- 				deps[loc] = normalize(path, contextReq);
- 			});
+			// alter plugin storage
+			each(pluginLocs, function(loc) {
+				// normalize path names
+				var path = depPaths[loc + offset];
+				deps[loc] = normalize(path, contextReq);
+			});
 
- 			// alter exports deps
- 			each(exportsLocs, function(loc) {
- 				deps[loc] = 'exports';
- 			});
+			// alter exports deps
+			each(exportsLocs, function(loc) {
+				deps[loc] = 'exports';
+			});
 
- 			// alter require deps
- 			each(requireLocs, function(loc) {
- 				deps[loc] = 'require';
- 			});
+			// alter require deps
+			each(requireLocs, function(loc) {
+				deps[loc] = 'require';
+			});
 
- 			// save the module
+			// save the module
 			moduleMap[module.id] = {
 				factory: factory,
 				deps: wrap ? ['require', 'exports'] : deps,
 				require: contextReq
 			};
 
-			if (module.uri.indexOf('./'+config.stubUrl) === 0) {
+			if (module.uri.indexOf('./' + config.stubBaseUrl) === 0) {
 				// stub has been saved to module map, no further processing needed
 				return;
 			}
 
 			// auto load associated files
-			if (config.autoLoad) {
-				var autoDeps = [];
-				var loadAll = typeof config.autoLoad === 'boolean' || config.autoLoad === 'all';
-
-				if (loadAll || config.autoLoad === "stub") {
-					autoDeps.push(config.stubUrl + '/' + module.id + '.stub')
-				}
-				if (loadAll || config.autoLoad === "spec") {
-					autoDeps.push(config.specUrl + '/' + module.id + '.spec')
-				}
-
+			if (config.stubBaseUrl) {
+				autoDeps.push(config.stubBaseUrl + '/' + module.id + '.stub');
+			}
+			if (config.specBaseUrl) {
+				autoDeps.push(config.specBaseUrl + '/' + module.id + '.spec');
+			}
+			if (autoDeps.length) {
 				require({
 					context: module.id,
 					baseUrl: '.',
@@ -170,26 +186,30 @@ var testr, define;
 			
 			// define the module as its path name, used by dependants
 			return module.id;
-		};
+		}
 
 		// hook back into the loader with modified dependancy paths
 		// to trigger dependency loading, and execute the trojan
-		if (extractedPaths.length) {
-
-		}
 		defineArgs = [depPaths.concat(extractedPaths), trojan];
-		name && defineArgs.unshift(name);
+		if (name) { defineArgs.unshift(name); }
 		origDefine.apply(null, defineArgs);
-		name && require([name]); // force requirejs to load the module immediately and call the trojan
+		if (name) { require([name]); } // force requirejs to load the module immediately and call the trojan
 	};
 
-	// copy amd properties
-	define.amd = origDefine.amd;
+	// copy original function properties
+	each(origRequire, function(val, key) {
+		require[key] = val;
+	});
+	each(origDefine, function(val, key) {
+		define[key] = val;
+	});
 
-	// allow restoration of original define function
-	define.restore = function() {
-		window.define = origDefine;
-	}
+	// suppress 404 errors
+	origRequire.onError = function(err) {
+		if (err.requireType !== 'scripterror') {
+			throw err;
+		}
+	};
 
 	// create new modules with the factory
 	function buildModule(moduleName, stubs, useExternal, subject, whitelistExceptions) {
@@ -201,8 +221,11 @@ var testr, define;
 				return stubs && stubs[depName] || buildModule(depName, stubs, useExternal, false, whitelistExceptions);
 			};
 
+		// expose getModule method
+		lazy = getModule;
+
 		// get external stub
-		externalStub = !subject && useExternal && moduleMap[config.stubUrl + '/' + moduleName + '.stub'];
+		externalStub = !subject && useExternal && moduleMap[config.stubBaseUrl + '/' + moduleName + '.stub'];
 
 		// throw error if module must be stubbed
 		if (mustBeStubbed && !subject && !externalStub) {
@@ -275,6 +298,9 @@ var testr, define;
 		var whitelistExceptions = [],
 			module, plural;
 
+		// first call to set running state
+		running = true;
+
 		// check module name
 		if (typeof moduleName !== 'string') {
 			throw Error('module name must be a string');
@@ -293,7 +319,7 @@ var testr, define;
 
 		// throw error if not all required stubs provided
 		if (whitelistExceptions.length) {
-			plural = (whitelistExceptions.length > 1) ? 's' : ''
+			plural = (whitelistExceptions.length > 1) ? 's' : '';
 			throw Error('module' + plural + ' must be stubbed: ' + whitelistExceptions.join(', '));
 		}
 
@@ -304,11 +330,21 @@ var testr, define;
 	// testr config
 	testr.config = function(userConfig) {
 		each(userConfig, function(val, key) {
-			config[key] = val;
+			if (val) {
+				config[key] = val;
+			} else {
+				delete config[key];
+			}
 		});
 	};
 
+	// restore function
+	testr.restore = function() {
+		window.define = origDefine;
+		window.require = origRequire;
+	}
+
 	// attach version
-	testr.version = version;
+	testr.version = version;	
 
 }());

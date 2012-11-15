@@ -6,7 +6,8 @@ describe('testr config', function() {
 		// return to original state
 		require = origRequire;
 		testr.config({
-			autoLoad: true,
+			specBaseUrl: 'spec',
+			stubBaseUrl: 'stub',
 			whitelist: []
 		});
 	});
@@ -35,7 +36,8 @@ describe('testr config', function() {
 
 		// configure testr then define a module
 		testr.config({
-			autoLoad: false
+			specBaseUrl: undefined,
+			stubBaseUrl: undefined
 		});
 		define('disableAutoLoad', {});
 

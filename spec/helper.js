@@ -17,7 +17,7 @@
 			required = testrApp.required;
 		
 		// perform module verification
-		define.restore();
+		testr.restore();
 		actuals(required, function() {
 			// setup a test for each module
 			describe('module verification', function() {
@@ -37,13 +37,6 @@
 			env.execute();
 		});
 	};
-
-	// prevent script errors on require
-	require.onError = function(err) {
-		if (err.requireType !== 'scripterror') {
-			throw err;
-		}
-	}
 
 	// wait until all required calls have complete
 	window.testrApp.onload = function() {

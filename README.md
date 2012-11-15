@@ -20,36 +20,27 @@ testr('path/to/module', stubs, useExternal);
 
 ### Setup
 
-Include the requirejs script before testr.js, and be sure to have a valid `data-main` attribute that points to your application's top-level require call. Once all source code has been loaded, testr.js will automatically attempt to load all spec and external stub files. These will use an identical path, with a base url and suffix of either `spec` or `stub`. For example:
+Include the requirejs script before testr.js, and be sure to have a valid `data-main` attribute that points to your application's top-level require call. Once all source code has been loaded, testr.js will automatically attempt to load all spec and external stub files. These will use an identical path, with a configurable base url. For example:
 
 > **Source**: /src/path/to/module.js  
 > **Spec**: /spec/path/to/module.spec.js  
 > **Stub**: /stub/path/to/module.stub.js  
 
-*Note: If the spec or stub file does not exist, this will result in a 404 error. Feel free to fork this project and suppress these, if possible.*
+*Note: If the spec or stub file does not exist, this will result in a 404 error.*
 
 ### Configuration
 
 ```javascript
 testr.config({
-	autoLoad: 'all',
-	specUrl: 'spec',
-	stubUrl: 'stub',
+	specBaseUrl: 'spec',
+	stubBaseUrl: 'stub',
 	whitelist: ['path/to/allowed/actual', 'underscore', 'backbone']
 });
 ```
 
-**autoLoad**: boolean or string to allow loading of associated `spec` and `stub` files. Allowed values are true, false, 'spec', 'stub', 'all'. The 'all' value is the same as true. *Default: false*
+**specBaseUrl** and **stubBaseUrl**: when these base URLs are present, they will be used to automatically load spec and stub files. Each resource loaded will use the module definition paths, with these base URLs prefixed.
 
-**specUrl**: path relative to your spec runner where spec files should be auto loaded from. *Default: spec*
-
-**stubUrl**: path relative to your spec runner where stub files should be auto loaded from. *Default: stub*
-
-**whitelist**: an array of paths that are allowed as actual dependencies. All other modules must be stubbed. *Default: off*
-
-### Not Supported
-
-* Non-default contexts
+**whitelist**: an array of paths that are allowed as actual dependencies. All other modules must be stubbed.
 
 ### Example
 
@@ -92,45 +83,17 @@ passed = (output === 'Today is Monday, 30th April, 2012');
 console.log('User-friendly date: ' + (passed ? 'PASS' : 'FAIL'));
 ```
 
-#### Using Jasmine BDD
-
-```javascript
-describe('Today print', function() {
-
-	var date = {}, today;
-
-	beforeEach(function() {
-		date.today = new Date(2012, 3, 30);
-		today = testr('today', {'util/date': date});	
-	});
-
-	it('is user-friendly', function() {
-		expect(today.getDateString()).toBe('Today is Monday, 30th April, 2012');
-	});
-
-	it('updates the print format', function() {
-		date.today = new Date(2012, 2, 30);
-		today.setFormat('short');
-		today.polluted = true;
-		expect(today.getDateString()).toBe('Today is Fri, 30 Mar 12');
-		expect(today.getFormat()).toBe('short');
-	});
-
-	it('is not polluted', function() {
-		expect(today.polluted).toBeUndefined();
-		expect(today.getDateString()).toBe('Today is Monday, 30th April, 2012');
-		expect(today.getFormat()).toBe('long');
-	});
-
-});
-```
-
 ### Projects using testr.js
 
 #### [asq](https://github.com/mattfysh/asq)
 
 Wrap a 'one-at-a-time' queue around an asynchronous function.
 
-#### [after](https://github.com/mattfysh/after)
+### Tests
 
-Another promises implementation.
+1. Clone this repo
+2. `npm install`
+3. `buster server`
+4. Point one or more browsers at http://localhost:1111/
+5. "Capture browser"
+6. `buster test`
