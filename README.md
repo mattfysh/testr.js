@@ -38,9 +38,9 @@ testr.config({
 });
 ```
 
-**specBaseUrl** and **stubBaseUrl**: when these base URLs are present, they will be used to automatically load spec and stub files. Each resource loaded will use the module definition paths, with these base URLs prefixed (see Setup, above).
+**specBaseUrl**, **stubBaseUrl**: When either or both of these base URLs are present, they will be used to automatically load spec and stub files. Each resource loaded will use the module definition paths, with these base URLs prefixed (see Setup, above).
 
-**whitelist**: an array of paths that are allowed as actual dependencies. All other modules must be stubbed.
+**whitelist**: By default, this feature is not enabled. It can be configured as an array of paths that are allowed as actual dependencies. All other modules must be stubbed, encouraging genuine unit tests and less actual dependencies.
 
 ### Example
 
