@@ -1,5 +1,5 @@
 /**
- * testr.js 1.2.0
+ * testr.js 1.3.0
  * https://www.github.com/mattfysh/testr.js
  * Distributed under the MIT license
  */
@@ -7,16 +7,21 @@
 var testr, define, require;
 
 (function() {
-	var version = '1.2.0',
+	var version = '1.3.0',
 		origRequire = require,
 		origDefine = define,
 		cjsRequireRegExp = /require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
 		noop = function() {},
 		moduleMap = {},
 		pluginPaths = {},
-		config = {},
+		config = {
+			root: './'
+		},
 		running = false,
-		lazy;
+		requireCount = 0,
+		requireLoadedCount = 0,
+		lazy,
+		complete;
 
 	// type detection
 	function isArray(a) {
@@ -84,7 +89,26 @@ var testr, define, require;
 			}, 0);
 		} else {
 			// calls made to load modules, before tests are executed
-			origRequire(deps, callback);
+			var cfg = deps.deps ? deps : {deps: deps};
+			if (!cfg.context) {
+				delete cfg.baseUrl;
+			}
+			
+			requireCount++;
+			
+			var thisRequire = origRequire(cfg, cfg.deps, function() {
+				cfg.callback && cfg.callback();
+				if (++requireLoadedCount === requireCount) {
+					// all requires have finished loading, execute testr callback
+					complete();
+				}
+			}, function(err) {
+				// force failures to finish loading, by defining them as empty modules
+				var failed = err.requireModules[0];
+				thisRequire.undef(failed);
+				origDefine(failed, {});
+				thisRequire([failed]);
+			});
 		}
 	};
 
@@ -164,22 +188,22 @@ var testr, define, require;
 				require: contextReq
 			};
 
-			if (module.uri.indexOf('./' + config.stubBaseUrl) === 0) {
+			if (module.uri.indexOf('./' + config.stubUrl) === 0) {
 				// stub has been saved to module map, no further processing needed
 				return;
 			}
 
 			// auto load associated files
-			if (config.stubBaseUrl) {
-				autoDeps.push(config.stubBaseUrl + '/' + module.id + '.stub');
+			if (config.stubUrl) {
+				autoDeps.push(config.stubUrl + '/' + module.id + '.stub');
 			}
-			if (config.specBaseUrl) {
-				autoDeps.push(config.specBaseUrl + '/' + module.id + '.spec');
+			if (config.specUrl) {
+				autoDeps.push(config.specUrl + '/' + module.id + '.spec');
 			}
 			if (autoDeps.length) {
 				require({
 					context: module.id,
-					baseUrl: '.',
+					baseUrl: config.root,
 					deps: autoDeps
 				});
 			}
@@ -225,7 +249,7 @@ var testr, define, require;
 		lazy = getModule;
 
 		// get external stub
-		externalStub = !subject && useExternal && moduleMap[config.stubBaseUrl + '/' + moduleName + '.stub'];
+		externalStub = !subject && useExternal && moduleMap[config.stubUrl + '/' + moduleName + '.stub'];
 
 		// throw error if module must be stubbed
 		if (mustBeStubbed && !subject && !externalStub) {
@@ -345,6 +369,13 @@ var testr, define, require;
 	}
 
 	// attach version
-	testr.version = version;	
+	testr.version = version;
+
+	// kick off
+	testr.run = function(rconf, callback) {
+		complete = callback;
+		origRequire({baseUrl: config.root + config.baseUrl});
+		require([rconf]);
+	};
 
 }());

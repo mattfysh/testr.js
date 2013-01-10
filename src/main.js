@@ -1,66 +1,38 @@
 (function() {
-	var baseUrl = 'src',
-		paths = {
+	var deps = [],
+		config;
+
+	// basic
+	deps.push('fn', 'obj', 'hasdeps', 'lazy');
+	// advanced
+	deps.push('plugins/uses', 'usejquery', 'cjs/wrap');
+	// module naming
+	deps.push('path', '../sibling/outsidebase', 'sibling/pathtarget', 'rename/def');
+	// exports
+	deps.push('exports/uses', 'exports/returns');
+
+	// require.js config object
+	config = {
+		baseUrl: 'src',
+		paths: {
 			'path': 'pathtarget',
 			'sibling': '../sibling',
-			'text': '../lib/plugins/require/text.' + (require.version === '1.0.8' ? '1.0.8' : '2.0.0'),
+			'text': '../lib/plugins/require/text.2.0.0',
 			'pluginobj': '../lib/plugins/require/pluginobj',
 			'jquery': '../lib/jquery-1.7.2'
 		},
-		required = [],
-		allLoaded = false,
-		count = 0;
-
-	function requireSet(set, callback) {
-		required.push.apply(required, set);
-		require(set, callback);
-	}
-
-	function checkLoaded() {
-		count += 1;
-		if (count === 2) {
-			testrApp.onload();
+		deps: deps,
+		callback: function() {
+			require(['require/uses', 'rename/use']);
 		}
 	}
 
-	require.config({
-		paths: paths,
-		baseUrl: baseUrl
-	});
+	require(config);
 
-	testr.config({
-		specBaseUrl: 'spec',
-		stubBaseUrl: 'stub'
-	});
-
-	// basic require
-	requireSet(['fn', 'obj', 'hasdeps', 'lazy'], function() {
-		// has dependency on obj
-		requireSet(['require/uses'], function() {
-			checkLoaded();
-		});
-	});
-
-	// advanced
-	requireSet(['plugins/uses', 'usejquery', 'cjs/wrap']);
-
-	// advanced module names
-	requireSet(['path', '../sibling/outsidebase', 'sibling/pathtarget', 'rename/def'], function() {
-		// has dependency on rename/def
-		requireSet(['rename/use'], function() {
-			checkLoaded();
-		});
-	});
-
-	// exports
-	requireSet(['exports/uses', 'exports/returns']);
-
-	// export the set of required modules
-	window.testrApp = {
-		required: required,
-		paths: paths,
-		baseUrl: baseUrl,
-		onload: function() {}
-	}
+	// export config
+	window.rconf = {
+		paths: config.paths,
+		deps: config.deps
+	};
 
 }());
