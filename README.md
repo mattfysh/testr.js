@@ -40,7 +40,8 @@ Begin loading your app, and optionally your specs and stubs, with the following 
 	testr.config({
 		root: '../',
 		baseUrl: 'src',
-		specUrl: 'spec'
+		specUrl: 'spec',
+		ignore ['jquery', 'underscore']
 	});
 
 	// load app and specs
@@ -61,6 +62,7 @@ testr.config({
 	baseUrl: 'src',
 	specUrl: 'spec',
 	stubUrl: 'stub',
+	ignore: ['jquery', 'underscore'],
 	whitelist: ['path/to/allowed/actual', 'underscore', 'backbone']
 });
 ```
@@ -70,6 +72,8 @@ testr.config({
 **baseUrl**: Use this property if you wish to override the `baseUrl` given in the require.js config file.
 
 **specUrl**, **stubUrl**: When either or both of these base URLs are present, they will be used to automatically load spec and stub files per module. Each resource loaded will use the module definition paths, with these base URLs prefixed and a modified file extension (see Setup, above).
+
+**ignore**: List the modules which should not be managed by testr.js. These objects will be managed by requirejs, and the same instance of an ignored module will be used each time it is required.
 
 **whitelist**: By default, this feature is not enabled. It can be configured as an array of paths that are allowed as actual dependencies. All other modules must be stubbed, encouraging genuine unit tests and less actual dependencies.
 
@@ -131,4 +135,5 @@ Wrap a 'one-at-a-time' queue around an asynchronous function.
 
 ## Release History
 
+* 13 Jan 2013 - 1.3.1 - added ignore option to config, added compatibility with requirejs shim config.
 * 10 Jan 2013 - 1.3.0 - testr.run introduced, enabling the require.js config file to be shared with testr.js, and allowing a callback function to be executed once the app and all optional specs and stubs have been loaded. Support for Require.js 1.0 removed.

@@ -113,4 +113,12 @@ describe('testr config', function() {
 		expect(getModule).toThrow(new Error('modules must be stubbed: deeper/isdep, obj'));
 	});
 
+	it('ignores specified modules, using actual from requirejs', function() {
+		var module = require('ignore');
+		expect(module.ignore).toBe(true);
+		module.newprop = 'a';
+		module = testr('ignore');
+		expect(module.newprop).toBe('a');
+	});
+
 });

@@ -3,13 +3,15 @@
 		config;
 
 	// basic
-	deps.push('fn', 'obj', 'hasdeps', 'lazy');
+	deps.push('fn', 'obj', 'hasdeps', 'lazy', 'ignore');
 	// advanced
 	deps.push('plugins/uses', 'usejquery', 'cjs/wrap');
 	// module naming
 	deps.push('path', '../sibling/outsidebase', 'sibling/pathtarget', 'rename/def');
 	// exports
 	deps.push('exports/uses', 'exports/returns');
+	// shim
+	deps.push('shimmed/uses', 'shimmed/uses2', 'shimmed/uses3');
 
 	// require.js config object
 	config = {
@@ -24,6 +26,11 @@
 		deps: deps,
 		callback: function() {
 			require(['require/uses', 'rename/use']);
+		},
+		shim: {
+			'shimmed/obj': {
+				exports: 'ShimmedObj'
+			}
 		}
 	}
 
@@ -32,7 +39,8 @@
 	// export config
 	window.rconf = {
 		paths: config.paths,
-		deps: config.deps
+		deps: config.deps,
+		shim: config.shim
 	};
 
 }());

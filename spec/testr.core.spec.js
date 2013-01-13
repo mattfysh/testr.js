@@ -240,4 +240,17 @@ describe('testr', function() {
 
 	});
 
+	describe('with shimmed modules', function() {
+
+		it('uses object from requirejs', function() {
+			var module = testr('shimmed/uses');
+			expect(module.o.isShimmed).toBe(true);
+			module = testr('shimmed/uses2');
+			expect(module.o.isShimmed).toBe(true);
+			module = testr('shimmed/uses3');
+			expect(module.o.isShimmed).toBe(true);
+		});
+
+	});
+
 });

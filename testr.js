@@ -1,5 +1,5 @@
 /**
- * testr.js 1.3.0
+ * testr.js 1.3.1
  * https://www.github.com/mattfysh/testr.js
  * Distributed under the MIT license
  */
@@ -7,7 +7,7 @@
 var testr, define, require;
 
 (function() {
-	var version = '1.3.0',
+	var version = '1.3.1',
 		origRequire = require,
 		origDefine = define,
 		cjsRequireRegExp = /require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
@@ -157,12 +157,27 @@ var testr, define, require;
 		function trojan(contextReq, module) {
 			var offset = 2,
 				deps = [].slice.call(arguments, offset),
-				autoDeps = [];
+				autoDeps = [],
+				ignore = false;
 
-			if (!module || pluginPaths[module.id]) {
+			// determine if the module should be ignored
+			each(config.ignore, function(ignoreMod) {
+				if (module.id === ignoreMod) {
+					ignore = true;
+				}
+			});
+
+			if (!module || pluginPaths[module.id] || ignore) {
 				// jquery or plugin, give requirejs the real module
 				return (typeof factory === 'function') ? factory.apply(null, deps) : factory;
 			}
+
+			// find dependencies which are stored in requirejs, replace with path
+			each(deps, function(dep, i) {
+				if (typeof dep !== 'string') {
+					deps[i] = depPaths[i + offset];
+				}
+			});
 
 			// alter plugin storage
 			each(pluginLocs, function(loc) {
@@ -298,7 +313,12 @@ var testr, define, require;
 				dep = exports;
 			} else if (dep === 'require') {
 				dep = function(path) {
-					return getModule(normalize(path, contextReq));
+					var module = contextReq(path);
+					if (typeof module === 'string') {
+						// module defined by testr.js, normalise path and build it
+						module = getModule(module);
+					}
+					return module;
 				};
 			} else {
 				dep = getModule(dep);

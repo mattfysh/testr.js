@@ -10,7 +10,8 @@
 	testr.config({
 		baseUrl: 'src',
 		specUrl: 'spec',
-		stubUrl: 'stub'
+		stubUrl: 'stub',
+		ignore: ['ignore']
 	});
 
 	// run testr.js
