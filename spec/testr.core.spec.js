@@ -105,8 +105,10 @@ describe('testr', function() {
 
 	describe('plugins', function() {
 
-		it('takes full control of dependency resolution', function() {
+		it('take full control of dependency resolution', function() {
 			var module = testr('plugins/uses');
+			expect(module.template).toBe('<div>{{content}}</div>');
+			module = testr('plugins/uses2');
 			expect(module.template).toBe('<div>{{content}}</div>');
 		});
 

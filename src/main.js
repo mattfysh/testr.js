@@ -5,7 +5,7 @@
 	// basic
 	deps.push('fn', 'obj', 'hasdeps', 'lazy', 'ignore');
 	// advanced
-	deps.push('plugins/uses', 'usejquery', 'cjs/wrap');
+	deps.push('plugins/uses', 'plugins/uses2', 'usejquery', 'cjs/wrap');
 	// module naming
 	deps.push('path', '../sibling/outsidebase', 'sibling/pathtarget', 'rename/def');
 	// exports

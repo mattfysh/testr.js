@@ -135,5 +135,6 @@ Wrap a 'one-at-a-time' queue around an asynchronous function.
 
 ## Release History
 
+* 13 Jan 2013 - 1.3.2 - fixed bug when attempting to require plugin modules that were strings
 * 13 Jan 2013 - 1.3.1 - added ignore option to config, added compatibility with requirejs shim config.
 * 10 Jan 2013 - 1.3.0 - testr.run introduced, enabling the require.js config file to be shared with testr.js, and allowing a callback function to be executed once the app and all optional specs and stubs have been loaded. Support for Require.js 1.0 removed.

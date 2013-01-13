@@ -1,5 +1,5 @@
 /**
- * testr.js 1.3.1
+ * testr.js 1.3.2
  * https://www.github.com/mattfysh/testr.js
  * Distributed under the MIT license
  */
@@ -7,7 +7,7 @@
 var testr, define, require;
 
 (function() {
-	var version = '1.3.1',
+	var version = '1.3.2',
 		origRequire = require,
 		origDefine = define,
 		cjsRequireRegExp = /require\s*\(\s*["']([^'"\s]+)["']\s*\)/g,
@@ -314,7 +314,7 @@ var testr, define, require;
 			} else if (dep === 'require') {
 				dep = function(path) {
 					var module = contextReq(path);
-					if (typeof module === 'string') {
+					if (typeof module === 'string' && path.indexOf('!') === -1) {
 						// module defined by testr.js, normalise path and build it
 						module = getModule(module);
 					}
