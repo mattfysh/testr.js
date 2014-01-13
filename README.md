@@ -41,7 +41,7 @@ Begin loading your app, and optionally your specs and stubs, with the following 
 		root: '../',
 		baseUrl: 'src',
 		specUrl: 'spec',
-		ignore ['jquery', 'underscore']
+		ignore: ['jquery', 'underscore']
 	});
 
 	// load app and specs
